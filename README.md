@@ -68,7 +68,7 @@ To get started with MultiROS, follow these steps:
 1. Clone the repository:
     ```shell
     cd ~/catkin_ws/src
-    git https://github.com/ncbdrck/multiros.git
+    git clone https://github.com/ncbdrck/multiros.git
     ```
 
 2. MultiROS relies on several Python packages. You can install them by running the following command:
