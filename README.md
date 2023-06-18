@@ -99,6 +99,36 @@ We would like to thank the following projects and communities for their valuable
 - [frobs_rl](https://frobs-rl.readthedocs.io/en/latest/)
 - [gym-gazebo](https://github.com/erlerobot/gym-gazebo/)
 
+## Cite
+
+If you use MultiROS in your research or work and would like to cite it, you can use the following citation:
+
+Repository
+```bibtex
+@misc{multiros,
+  author = {Kapukotuwa, Jayasekara},
+  booktitle = {GitHub repository},
+  publisher = {GitHub},
+  title = {MultiROS: ROS-Based Robot Simulation Environment for Concurrent Deep Reinforcement Learning},
+  url = {https://github.com/ncbdrck/multiros},
+  year = {2022}
+}
+```
+Article
+```bibtex
+@inproceedings{kapukotuwa_multiros_2022,
+	title = {{MultiROS}: {ROS}-{Based} {Robot} {Simulation} {Environment} for {Concurrent} {Deep} {Reinforcement} {Learning}},
+	shorttitle = {{MultiROS}},
+	doi = {10.1109/CASE49997.2022.9926475},
+	booktitle = {2022 {IEEE} 18th {International} {Conference} on {Automation} {Science} and {Engineering} ({CASE})},
+	author = {Kapukotuwa, Jayasekara and Lee, Brian and Devine, Declan and Qiao, Yuansong},
+	month = aug,
+	year = {2022},
+	note = {ISSN: 2161-8089},
+	pages = {1098--1103},
+}
+```
+
 ## Contact
 
 For questions, suggestions, or collaborations, feel free to reach out to the project maintainer at [j.kapukotuwa@research.ait.ie](mailto:j.kapukotuwa@research.ait.ie).
