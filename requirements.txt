@@ -1,0 +1,7 @@
+# MultiROS Requirements
+
+# Gym library for reinforcement learning environments
+gym>=0.21.0
+
+# NumPy for numerical computations
+numpy
