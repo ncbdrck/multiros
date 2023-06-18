@@ -4,14 +4,16 @@
 
 MultiROS is an open-source Robot Operating System (ROS)-based simulation environment designed for concurrent deep reinforcement learning. It provides a flexible and scalable framework for training and evaluating reinforcement learning agents in complex robotic tasks.
 
-MultiROS supports training robots in both simulation and the real world. The simulation environment is based on Gazebo, providing a realistic simulation platform for testing and developing reinforcement learning algorithms. Additionally, MultiROS provides interfaces and tools for seamlessly transferring learned policies to real-world robotic systems.
+This package supports training robots in both simulation and the real world. The simulation environment is based on Gazebo, providing a realistic simulation platform for testing and developing reinforcement learning algorithms. 
+
+Additionally, MultiROS provides interfaces and tools for seamlessly transferring learned policies to real-world robotic systems.
 ## Prerequisites
 
 Before installing MultiROS, make sure you have the following prerequisites:
 
 ### ROS Installation
 
-MultiROS requires a working installation of ROS. If you haven't installed ROS yet, please follow the official [ROS installation guide](http://wiki.ros.org/ROS/Installation) for your specific operating system. MultiROS has been tested with ROS Noetic version, and the following instructions will guide you through the installation of ROS Noetic on Ubuntu 20.04:
+MultiROS requires a working installation of ROS. If you haven't installed ROS yet, please follow the official [ROS installation guide](http://wiki.ros.org/ROS/Installation) for your specific operating system. This package has been tested with ROS Noetic version, and the following instructions will guide you through the installation of ROS Noetic on Ubuntu 20.04:
 ```shell
 sudo sh -c 'echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) main" > /etc/apt/sources.list.d/ros-latest.list'
 sudo apt install curl
@@ -99,4 +101,4 @@ We would like to thank the following projects and communities for their valuable
 
 ## Contact
 
-For questions, suggestions, or collaborations, feel free to reach out to us at [j.kapukotuwa@research.ait.ie](mailto:j.kapukotuwa@research.ait.ie).
+For questions, suggestions, or collaborations, feel free to reach out to the project maintainer at [j.kapukotuwa@research.ait.ie](mailto:j.kapukotuwa@research.ait.ie).
