@@ -97,4 +97,4 @@ We would like to thank the following projects and communities for their valuable
 
 ## Contact
 
-For questions, suggestions, or collaborations, feel free to reach out to the project maintainer at [j.kapukotuwa@research.ait.ie](mailto:j.kapukotuwa@research.ait.ie).
+For questions, suggestions, or collaborations, feel free to reach out to us at [j.kapukotuwa@research.ait.ie](mailto:j.kapukotuwa@research.ait.ie).
