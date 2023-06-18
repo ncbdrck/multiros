@@ -1,3 +1,5 @@
+#!/bin/python3
+
 import gym
 from multiprocessing import Process, Pipe
 
