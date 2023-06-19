@@ -76,7 +76,8 @@ To get started with MultiROS, follow these steps:
     ```shell
     # Install pip if you haven't already by running this command
     sudo apt-get install python3-pip
-    
+
+    # install the required Python packages for MultiROS by running
     cd ~/catkin_ws/src/multiros
     pip3 install -r requirements.txt
     ```
