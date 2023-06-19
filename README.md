@@ -74,7 +74,9 @@ To get started with MultiROS, follow these steps:
 2. MultiROS relies on several Python packages. You can install them by running the following command:
 
     ```shell
+    # Install pip if you haven't already by running this command
     sudo apt-get install python3-pip
+    
     cd ~/catkin_ws/src/multiros
     pip3 install -r requirements.txt
     ```
