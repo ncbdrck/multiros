@@ -147,7 +147,7 @@ class MoveitMultiros(object):
 
         # Set the joint target values
         for i in range(len(joint_target_values)):
-            joint_goal[i] = float(joint_target_values[i])
+            joint_goal[i] = joint_target_values[i]
 
         gazebo_core.unpause_gazebo()
 
