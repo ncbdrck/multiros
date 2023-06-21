@@ -7,7 +7,7 @@ from multiprocessing import Process, Pipe
     This is the main class for the Multiros package.
     
     Usage:
-        from from multiros.core import multiros_gym as gym
+        from multiros.core import multiros_gym as gym
         env = gym.make("env_name", args)
         env.reset()
 """
@@ -73,11 +73,11 @@ class multiros_gym:
 
     @classmethod
     def make(cls, env_name, *args, **kwargs):
-        # Create an instance of the gym_v2 class and pass it the environment name and any additional arguments
+        # Create an instance of the multiros_gym class and pass it the environment name and any additional arguments
         env = cls(env_name, *args, **kwargs)
         # Receive the observation and action spaces from the worker process and set them on the instance
         env.observation_space, env.action_space = env.parent_conn.recv()
-        # Return the instance of the gym_v2 class
+        # Return the instance of the multiros_gym class
         return env
 
     def step(self, action):
