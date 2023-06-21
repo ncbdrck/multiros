@@ -90,6 +90,11 @@ class GazeboBaseEnv(gym.Env):
         self.gazebo_pid = gazebo_pid
         self.random_seed = seed
 
+        self.info = {}
+        self.done = None
+        self.reward = 0.0
+        self.observation = None
+
         # --------- Change the ros/gazebo master
         # defined in Task Env
         if self.ros_port is not None:
@@ -203,14 +208,14 @@ class GazeboBaseEnv(gym.Env):
             gazebo_core.gazebo_step(steps=self.num_gazebo_steps)
 
         # Get the observation, reward, and done flag
-        observation = self._get_observation()
-        reward = self._get_reward()
-        done = self._is_done()
-        info = {}
+        self.observation = self._get_observation()
+        self.reward = self._get_reward()
+        self.done = self._is_done()
+        self.info = {}
 
         # rospy.loginfo(self.MAGENTA + "*************** End Step Env" + self.ENDC)
 
-        return observation, reward, done, info
+        return self.observation, self.reward, self.done, self.info
 
     def reset(self):
         """
@@ -229,11 +234,11 @@ class GazeboBaseEnv(gym.Env):
 
         # Reset Gazebo and get the initial observation
         self._reset_gazebo()
-        observation = self._get_observation()
+        self.observation = self._get_observation()
 
         rospy.loginfo(self.MAGENTA + "*************** End Reset Env" + self.ENDC)
 
-        return observation
+        return self.observation
 
     def close(self):
         """
