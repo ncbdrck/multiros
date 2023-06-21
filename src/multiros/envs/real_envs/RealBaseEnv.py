@@ -75,6 +75,11 @@ class RealBaseEnv(gym.Env):
         self.ros_port = ros_port
         self.random_seed = seed
 
+        self.info = {}
+        self.done = None
+        self.reward = 0.0
+        self.observation = None
+
         # --------- Change the ros master
         if self.ros_port is not None:
             ros_common.change_ros_master(ros_port=self.ros_port)
@@ -210,14 +215,14 @@ class RealBaseEnv(gym.Env):
         self._set_action(action)
 
         # Get the observation, reward, and done flag
-        observation = self._get_observation()
-        reward = self._get_reward()
-        done = self._is_done()
-        info = {}
+        self.observation = self._get_observation()
+        self.reward = self._get_reward()
+        self.done = self._is_done()
+        self.info = {}
 
         # rospy.loginfo(self.MAGENTA + "*************** End Step Env" + self.ENDC)
 
-        return observation, reward, done, info
+        return self.observation, self.reward, self.done, self.info
 
     def reset(self):
         """
@@ -250,11 +255,11 @@ class RealBaseEnv(gym.Env):
         self._check_connection_and_readiness()
         self._set_init_params()
 
-        observation = self._get_observation()
+        self.observation = self._get_observation()
 
         rospy.loginfo(self.MAGENTA + "*************** End Reset Env" + self.ENDC)
 
-        return observation
+        return self.observation
 
     def close(self):
         """
