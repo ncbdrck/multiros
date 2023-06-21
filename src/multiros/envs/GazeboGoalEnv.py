@@ -92,6 +92,13 @@ class GazeboGoalEnv(gym.GoalEnv):
         self.gazebo_pid = gazebo_pid
         self.random_seed = seed
 
+        self.info = {}
+        self.observation = None
+        self.achieved_goal = None
+        self.desired_goal = None
+        self.reward = 0.0
+        self.done = None
+
         # --------- Change the ros/gazebo master
         # defined in Task Env
         if self.ros_port is not None:
@@ -205,17 +212,17 @@ class GazeboGoalEnv(gym.GoalEnv):
             gazebo_core.gazebo_step(steps=self.num_gazebo_steps)
 
         # Get the observation, reward, and done flag
-        info = {}
-        observation = self._get_observation()
-        achieved_goal = self._get_achieved_goal()
-        desired_goal = self._get_desired_goal()
-        reward = self.compute_reward(achieved_goal, desired_goal, info)
-        done = self._is_done()
+        self.info = {}
+        self.observation = self._get_observation()
+        self.achieved_goal = self._get_achieved_goal()
+        self.desired_goal = self._get_desired_goal()
+        self.reward = self.compute_reward(self.achieved_goal, self.desired_goal, self.info)
+        self.done = self._is_done()
 
         # rospy.loginfo(self.MAGENTA + "*************** End Step Env" + self.ENDC)
 
-        return {'observation': observation, 'achieved_goal': achieved_goal,
-                'desired_goal': desired_goal}, reward, done, info
+        return {'observation': self.observation, 'achieved_goal': self.achieved_goal,
+                'desired_goal': self.desired_goal}, self.reward, self.done, self.info
 
     def reset(self):
         """
@@ -234,13 +241,13 @@ class GazeboGoalEnv(gym.GoalEnv):
 
         # Reset Gazebo and get the initial observation
         self._reset_gazebo()
-        observation = self._get_observation()
-        achieved_goal = self._get_achieved_goal()
-        desired_goal = self._get_desired_goal()
+        self.observation = self._get_observation()
+        self.achieved_goal = self._get_achieved_goal()
+        self.desired_goal = self._get_desired_goal()
 
         rospy.loginfo(self.MAGENTA + "*************** End Reset Env" + self.ENDC)
 
-        return {'observation': observation, 'achieved_goal': achieved_goal, 'desired_goal': desired_goal}
+        return {'observation': self.observation, 'achieved_goal': self.achieved_goal, 'desired_goal': self.desired_goal}
 
     def close(self):
         """
