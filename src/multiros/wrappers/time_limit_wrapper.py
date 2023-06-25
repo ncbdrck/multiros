@@ -46,6 +46,9 @@ class TimeLimitWrapper(gym.Wrapper):
             done = True
             info['time_limit_reached'] = True
 
+            # This is to log the success rate in stable_baselines3
+            info['is_success'] = 0.0
+
         return observation, reward, done, info
 
     def reset(self):
