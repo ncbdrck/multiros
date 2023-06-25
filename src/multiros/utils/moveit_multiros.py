@@ -212,11 +212,15 @@ class MoveitMultiros(object):
             bool: The result of the trajectory execution.
         """
         # Plan and execute a trajectory to reach a previously set target
-        plan = self.robot_arm.plan()
-
+        # plan = self.robot_arm.plan()
         # result = self.robot_arm.execute(plan, wait=True)
+
+        # Execute the trajectory to reach the target
         result = self.robot_arm.go(wait=True)
+
+        # Stop the robot arm from moving
         self.robot_arm.stop()
+
         return result
 
     def robot_pose(self):
@@ -340,10 +344,10 @@ class MoveitMultiros(object):
 
         # Set up a trajectory message to publish.
         ee_target = Pose()
-        ee_target.orientation.w = 1.0
-        ee_target.orientation.x = 0.0
-        ee_target.orientation.y = 0.0
-        ee_target.orientation.z = 0.0
+        ee_target.orientation.x = 1e-6
+        ee_target.orientation.y = 1e-6
+        ee_target.orientation.z = 1e-6
+        ee_target.orientation.w = 1.000000
         ee_target.position.x = position[0]
         ee_target.position.y = position[1]
         ee_target.position.z = position[2]
