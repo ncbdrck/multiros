@@ -17,6 +17,13 @@ It has the following methods (Main functions),
     11. check_goal: Check if a goal position is reachable by the robot arm.
     12. get_randomJointVals: Get random joint values for the robot arm.
     13. get_randomPose: Get a random pose for the robot arm.
+    14. set_planning_time: Set the maximum time allowed for planning a trajectory.
+    15. set_goal_position_tolerance: Set the goal position tolerance for the robot arm.
+    16. set_goal_orientation_tolerance: Set the goal orientation tolerance for the robot arm.
+    17. set_goal_joint_tolerance: Set the goal joint tolerance for the robot arm.
+    18. set_max_acceleration_scaling_factor: Set the maximum acceleration scaling factor for the robot arm.
+    19. set_max_velocity_scaling_factor: Set the maximum velocity scaling factor for the robot arm.
+
 """
 import sys
 import moveit_commander
@@ -313,27 +320,42 @@ class MoveitMultiros(object):
     """
             Main functions we can call from the object
     """
-    def set_trajectory_ee(self, action: Union[List[float], np.ndarray]) -> bool:
+
+    def set_trajectory_ee(self, position: Union[List[float], np.ndarray],
+                          orientation: Union[List[float], np.ndarray] = None) -> bool:
         """
         Set a pose target for the end effector of the robot arm.
 
         Args:
-            action (Union[List[float], np.ndarray]): The target position for the end effector.
+            position (Union[List[float], np.ndarray]): The target position for the end effector.
+            orientation (Union[List[float], np.ndarray]): The target orientation for the end effector (Optional).
 
         Returns:
             bool: The result of the trajectory execution.
         """
 
         # Convert action to list if it is a numpy array
-        if isinstance(action, np.ndarray):
-            action = action.tolist()
+        if isinstance(position, np.ndarray):
+            position = position.tolist()
 
         # Set up a trajectory message to publish.
         ee_target = Pose()
         ee_target.orientation.w = 1.0
-        ee_target.position.x = action[0]
-        ee_target.position.y = action[1]
-        ee_target.position.z = action[2]
+        ee_target.orientation.x = 0.0
+        ee_target.orientation.y = 0.0
+        ee_target.orientation.z = 0.0
+        ee_target.position.x = position[0]
+        ee_target.position.y = position[1]
+        ee_target.position.z = position[2]
+
+        if orientation is not None:
+            if isinstance(orientation, np.ndarray):
+                orientation = orientation.tolist()
+
+            ee_target.orientation.x = orientation[0]
+            ee_target.orientation.y = orientation[1]
+            ee_target.orientation.z = orientation[2]
+            ee_target.orientation.w = orientation[3]
 
         # Execute the trajectory to move the end effector to the desired position and orientation
         return self.arm_execute_pose(ee_target)
@@ -495,3 +517,65 @@ class MoveitMultiros(object):
         random_pose = self.robot_arm.get_random_pose()
         gazebo_core.pause_gazebo()
         return random_pose
+
+    def set_planning_time(self, planning_time: float):
+        """
+        Set the maximum allowed planning time. Specify the amount of time to be used for motion planning
+
+        Args:
+            planning_time (float): The maximum allowed planning time in seconds.
+        """
+        self.robot_arm.set_planning_time(planning_time)
+
+    def set_goal_position_tolerance(self, position_tolerance: float):
+        """
+        Set the tolerance for a target end-effector position
+
+        Args:
+            position_tolerance (float): The tolerance for the goal position in meters.
+        """
+        self.robot_arm.set_goal_position_tolerance(position_tolerance)
+
+    def set_goal_orientation_tolerance(self, orientation_tolerance: float):
+        """
+        Set the tolerance for a target end-effector orientation.
+
+        Args:
+            orientation_tolerance (float): The tolerance for the goal orientation in radians.
+        """
+        self.robot_arm.set_goal_orientation_tolerance(orientation_tolerance)
+
+    def set_goal_joint_tolerance(self, joint_tolerance: float):
+        """
+        Set the tolerance for a target joint configuration.
+
+        Args:
+            joint_tolerance (float): The tolerance for the goal joint configuration in radians.
+        """
+        self.robot_arm.set_goal_joint_tolerance(joint_tolerance)
+
+    def set_max_acceleration_scaling_factor(self, acceleration_scaling_factor: float):
+        """
+        Set a scaling factor to reduce the maximum joint accelerations. Allowed values are in (0,1].
+        The default value is set in the joint_limits.yaml of the moveit_config package.
+
+        Args:
+            acceleration_scaling_factor (float): The maximum acceleration scaling factor.
+        """
+        self.robot_arm.set_max_acceleration_scaling_factor(acceleration_scaling_factor)
+
+    def set_max_velocity_scaling_factor(self, velocity_scaling_factor: float):
+        """
+        Set a scaling factor to reduce the maximum joint velocities. Allowed values are in (0,1].
+        The default value is set in the joint_limits.yaml of the moveit_config package.
+
+        Args:
+            velocity_scaling_factor (float): The maximum velocity scaling factor.
+        """
+        self.robot_arm.set_max_velocity_scaling_factor(velocity_scaling_factor)
+
+
+
+
+
+
