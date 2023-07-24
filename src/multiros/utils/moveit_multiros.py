@@ -578,6 +578,45 @@ class MoveitMultiros(object):
         """
         self.robot_arm.set_max_velocity_scaling_factor(velocity_scaling_factor)
 
+    def set_trajectory_cartesian(self, waypoints: List[PoseStamped], eef_step: float = 0.01,
+                                 jump_threshold: float = 0.0,
+                                 avoid_collisions: bool = True) -> bool:
+        """
+        Set a cartesian trajectory for the end effector of the robot arm.
+
+        Args:
+            waypoints (List[PoseStamped]): The target waypoints for the end effector.
+            eef_step (float): The distance between waypoints in meters (Optional).
+            jump_threshold (float): The maximum distance in the configuration space between consecutive points in the resulting path (Optional).
+            avoid_collisions (bool): Whether to check for collisions between waypoints or not (Optional).
+
+        Returns:
+            bool: The result of the trajectory execution.
+
+        """
+        # Set the waypoints for the trajectory
+        self.robot_arm.set_pose_targets(waypoints)
+
+        # unpause gazebo
+        gazebo_core.unpause_gazebo()
+
+        # Plan a cartesian path to move the end effector through the waypoints
+        plan, fraction = self.robot_arm.compute_cartesian_path(waypoints, eef_step, jump_threshold, avoid_collisions)
+
+        # Execute the trajectory to move the end effector through the waypoints
+        result = self.robot_arm.execute(plan, wait=True)
+
+        # Stop the robot arm from moving
+        self.robot_arm.stop()
+
+        # Clear the pose targets
+        self.robot_arm.clear_pose_targets()
+
+        # pause gazebo
+        gazebo_core.unpause_gazebo()
+
+        return result
+
 
 
 
