@@ -553,7 +553,7 @@ def construct_roslaunch_command(pkg_name, launch_file_name, launch_file_abs_path
 
 
 def ros_node_launcher(pkg_name, node_name, launch_master=False, launch_new_term=True, name=None, ns="/", output="log",
-                      ros_port=None, gazebo_port=None) -> Tuple[str, str, bool]:
+                      ros_port=None, gazebo_port=None, args=None) -> Tuple[str, str, bool]:
     """
     Function to launch a ROS node from a package. If "launch_master" is "True", it will also launch a ROSCORE with the
     given "ros_port" or with a random ROS master port if "ros_port" is not specified.
@@ -568,6 +568,7 @@ def ros_node_launcher(pkg_name, node_name, launch_master=False, launch_new_term=
         output (str): log, screen, or None
         ros_port (str): The ROS_MASTER_URI port (optional).
         gazebo_port (str): The GAZEBO_MASTER_URI port (optional).
+        args (list of str): Args to pass.
 
     Returns:
         tuple[str, str, bool]: ROS Master port, GAZEBO Master port and True if the node was launched successfully,
@@ -604,6 +605,9 @@ def ros_node_launcher(pkg_name, node_name, launch_master=False, launch_new_term=
         print("ROS Master is running!")
 
     term_cmd = construct_rosrun_command(pkg_name, node_name, name=name, ns=ns, output=output)
+
+    if args is not None:
+        term_cmd += " " + " ".join(args)
 
     if launch_new_term:
         term_cmd = f"xterm -e '{term_cmd}'"
