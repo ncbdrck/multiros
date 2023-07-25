@@ -1,1 +1,1 @@
-from multiros.templates.gazebo_envs.task_envs import MyTaskEnv
+from multiros.templates.task_envs import MyTaskEnv

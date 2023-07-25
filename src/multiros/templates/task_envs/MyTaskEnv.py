@@ -4,7 +4,7 @@ import rospy
 from gym.envs.registration import register
 
 # Custom robot env
-from multiros.templates.gazebo_envs.robot_envs import MyRobotEnv
+from multiros.templates.robot_envs import MyRobotEnv
 
 # core modules of the framework
 from multiros.utils import gazebo_core
@@ -13,12 +13,11 @@ from multiros.utils import gazebo_core
 # from multiros.utils.moveit_multiros import MoveitMultiros
 from multiros.utils import ros_common
 # from multiros.utils import ros_controllers
-from multiros.utils import ros_markers
 
 # Register your environment using the OpenAI register method to utilize gym.make("TaskEnv-v0").
 register(
     id='MyTaskEnv-v0',
-    entry_point='multiros.templates.gazebo_envs.task_envs.MyTaskEnv:MyTaskEnv',
+    entry_point='multiros.templates.task_envs.MyTaskEnv:MyTaskEnv',
     max_episode_steps=100,
 )
 

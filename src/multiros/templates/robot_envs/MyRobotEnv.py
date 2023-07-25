@@ -1,38 +1,47 @@
 #!/bin/python3
 
-import rospy
-import rostopic
 from gym import spaces
 from gym.envs.registration import register
 
+from multiros.envs import GazeboBaseEnv
+
+import rospy
+import rostopic
+
 # core modules of the framework
+from multiros.utils import gazebo_core
+from multiros.utils import gazebo_models
+from multiros.utils import gazebo_physics
 from multiros.utils.moveit_multiros import MoveitMultiros
 from multiros.utils import ros_common
 from multiros.utils import ros_controllers
 from multiros.utils import ros_markers
 
-from multiros.envs.real_envs import RealGoalEnv
-
 """
 Although it is best to register only the task environment, one can also register the robot environment. 
-This is not necessary, but we can see if this section works by calling "gym.make" this env.
+This is not necessary, but we can see if this section 
+(Load the robot to gazebo and can control the robot with moveit or ros controllers)
+works by calling "gym.make" this env.
+but you need to
+    1. run gazebo - gazebo_core.launch_gazebo(launch_roscore=False, paused=False, pub_clock_frequency=100, gui=True)
+    2. init a node - rospy.init_node('test_MyRobotGoalEnv')
 """
 register(
-    id='MyRealRobotGoalEnv-v0',
-    entry_point='multiros.templates.real_envs.robot_envs.MyRealRobotGoalEnv:MyRealRobotGoalEnv',
+    id='MyRobotEnv-v0',
+    entry_point='multiros.templates.robot_envs.MyRobotEnv:MyRobotEnv',
     max_episode_steps=1000,
 )
 
 
-class MyRealRobotGoalEnv(RealGoalEnv.RealGoalEnv):
+class MyRobotEnv(GazeboBaseEnv.GazeboBaseEnv):
     """
-    Custom Robot Goal Env, use this class to describe the robots and the sensors in the Environment.
-    Superclass for all Robot Goal environments.
+    Custom Robot Env, use this class to describe the robots and the sensors in the Environment.
+    Superclass for all Robot environments.
     """
 
-    def __init__(self, ros_port: str = None, seed: int = None, reset_env_prompt: bool = False):
+    def __init__(self, ros_port: str = None, gazebo_port: str = None, gazebo_pid=None, seed: int = None):
         """
-        Initializes a new Robot Goal Environment
+        Initializes a new Robot Environment
 
         Describe the robot and the sensors used in the env.
 
@@ -42,27 +51,23 @@ class MyRealRobotGoalEnv(RealGoalEnv.RealGoalEnv):
         Actuators Topic List:
             MoveIt! : MoveIt! action server is used to send the joint positions to the robot.
         """
-        rospy.loginfo("Start Init Custom Robot Goal Env")
+        rospy.loginfo("Start Init Custom Robot Env")
 
         """
-        Change the ros master
+        Change the ros/gazebo master
         """
         if ros_port is not None:
-            ros_common.change_ros_master(ros_port=ros_port)
+            ros_common.change_ros_gazebo_master(ros_port=ros_port, gazebo_port=gazebo_port)
 
         """
-        Launch a roslaunch file that will setup the connection with the real robot 
+        Unpause Gazebo
         """
-
-        load_robot = False
-        robot_pkg_name = None
-        robot_launch_file = None
-        robot_args = None  # like this ["robot_model:=rx200", "use_actual := true" , "dof:=5"])
+        gazebo_core.unpause_gazebo()
 
         """
-        Load URDF to parameter server
+        Spawning the robot in Gazebo
         """
-        load_urdf = False
+        spawn_robot = False
 
         # location of the robot URDF file
         urdf_pkg_name = None
@@ -72,36 +77,69 @@ class MyRealRobotGoalEnv(RealGoalEnv.RealGoalEnv):
         # extra urdf args
         urdf_xacro_args = None
 
-        """
-        namespace of the robot
-        """
+        # namespace of the robot
         namespace = "/"
-
-        """
-        Launch the robot state publisher
-        """
-        # to launch robot state publisher
-        launch_robot_state_pub = False
 
         # robot state publisher
         robot_state_publisher_max_freq = None
         new_robot_state_term = False
 
-        """
-        ROS Controllers
-        """
-        # loads controllers to parameter server
-        load_controllers = False
+        robot_model_name = "robot"
+        robot_ref_frame = "world"
+
+        # Set the initial pose of the robot model
+        robot_pos_x = 0.0
+        robot_pos_y = 0.0
+        robot_pos_z = 0.0
+        robot_ori_w = 0.0
+        robot_ori_x = 0.0
+        robot_ori_y = 0.0
+        robot_ori_z = 0.0
 
         # controller (must be inside above pkg_name/config/)
         controllers_file = None
         controllers_list = None
 
-        # Set if the controllers in "controller_list" will be reset at the beginning of each episode, default is False.
+        """
+        Spawn other objects in Gazebo
+        """
+        # uncomment and change the parameters
+        # gazebo_models.spawn_sdf_model_gazebo(pkg_name=pkg_name, file_name="model.sdf", model_folder="/models/table",
+        #                                      model_name="table", namespace=namespace, pos_x=0.2)
+
+        """
+        Set if the controllers in "controller_list" will be reset at the beginning of each episode, default is False.
+        """
         reset_controllers = False
 
-        # Whether to prompt the user before resetting the controllers.
-        reset_controllers_prompt = False
+        """
+        Set the reset mode of gazebo at the beginning of each episode
+            "simulation": Reset gazebo simulation (Resets time) 
+            "world": Reset Gazebo world (Does not reset time) - default
+        
+        resetting the "simulation" restarts the entire Gazebo environment, including all models and their positions, 
+        while resetting the "world" retains the models but resets their properties and states within the world        
+        """
+        reset_mode = "world"
+
+        """
+        You can adjust the simulation step mode of Gazebo with two options:
+
+            1. Using Unpause, set action and Pause gazebo
+            2. Using the step function of Gazebo.
+
+        By default, the simulation step mode is set to 1 (gazebo pause and unpause services). 
+        However, if you choose simulation step mode 2, you can specify the number of steps Gazebo should take in each 
+        iteration. The default value for this is 1.
+        """
+        sim_step_mode = 1
+        num_gazebo_steps = 1
+
+        """
+        Set gazebo physics parameters to change the speed of the simulation
+        """
+        gazebo_max_update_rate = None
+        gazebo_timestep = None
 
         """
         kill rosmaster at the end of the env
@@ -109,29 +147,30 @@ class MyRealRobotGoalEnv(RealGoalEnv.RealGoalEnv):
         kill_rosmaster = True
 
         """
+        kill gazebo at the end of the env
+        """
+        kill_gazebo = True
+
+        """
         Clean ros Logs at the end of the env
         """
         clean_logs = False
 
         """
-        Whether to prompt the user for resetting the environment
-        """
-        # uncomment if not defined as an arg in __init__
-        # reset_env_prompt = False
-
-        """
-        Init MyRobotGoalEnv.
+        Init GazeboBaseEnv.
         """
         super().__init__(
-            load_robot=False, robot_pkg_name=None, robot_launch_file=None, robot_args=None,
-            load_urdf=load_urdf, urdf_pkg_name=urdf_pkg_name, urdf_file_name=urdf_file_name,
+            spawn_robot=spawn_robot, urdf_pkg_name=urdf_pkg_name, urdf_file_name=urdf_file_name,
             urdf_folder=urdf_folder, urdf_xacro_args=urdf_xacro_args, namespace=namespace,
-            launch_robot_state_pub=launch_robot_state_pub,
             robot_state_publisher_max_freq=robot_state_publisher_max_freq, new_robot_state_term=new_robot_state_term,
-            load_controllers=load_controllers, controllers_file=controllers_file, controllers_list=controllers_list,
-            reset_controllers=reset_controllers, reset_controllers_prompt=reset_controllers_prompt,
-            kill_rosmaster=kill_rosmaster, clean_logs=clean_logs, ros_port=ros_port, seed=seed,
-            reset_env_prompt=reset_env_prompt)
+            robot_model_name=robot_model_name, robot_ref_frame=robot_ref_frame,
+            robot_pos_x=robot_pos_x, robot_pos_y=robot_pos_y, robot_pos_z=robot_pos_z, robot_ori_w=robot_ori_w,
+            robot_ori_x=robot_ori_x, robot_ori_y=robot_ori_y, robot_ori_z=robot_ori_z,
+            controllers_file=controllers_file, controllers_list=controllers_list,
+            reset_controllers=reset_controllers, reset_mode=reset_mode, sim_step_mode=sim_step_mode,
+            num_gazebo_steps=num_gazebo_steps, gazebo_max_update_rate=gazebo_max_update_rate,
+            gazebo_timestep=gazebo_timestep, kill_rosmaster=kill_rosmaster, kill_gazebo=kill_gazebo,
+            clean_logs=clean_logs, ros_port=ros_port, gazebo_port=gazebo_port, gazebo_pid=gazebo_pid, seed=seed)
 
         """
         Define ros publisher, subscribers and services for robot and sensors
@@ -140,9 +179,9 @@ class MyRealRobotGoalEnv(RealGoalEnv.RealGoalEnv):
         # self.joint_state_sub = rospy.Subscriber(self.joint_state_topic, JointState, self.joint_state_callback)
         # self.joint_state = JointState()
 
-        # example: a moveit package
+        # example: moveit package
         # ros_common.ros_launch_launcher(pkg_name="interbotix_xsarm_moveit_interface",
-        #                                launch_file_name="moveit_interface.launch",
+        #                                launch_file_name="xsarm_moveit_interface.launch",
         #                                args=["robot_model:=rx200", "dof:=5", "use_python_interface:=true",
         #                                      "use_moveit_rviz:=false"])
 
@@ -171,7 +210,8 @@ class MyRealRobotGoalEnv(RealGoalEnv.RealGoalEnv):
         """
         Finished __init__ method
         """
-        rospy.loginfo("End Init Custom Robot Goal Env")
+        gazebo_core.pause_gazebo()
+        rospy.loginfo("End Init Custom Robot Env")
 
     # ---------------------------------------------------
     #   Custom methods for the Custom Robot Environment
@@ -238,23 +278,17 @@ class MyRealRobotGoalEnv(RealGoalEnv.RealGoalEnv):
         """
         raise NotImplementedError()
 
-    def compute_reward(self, achieved_goal, desired_goal, info) -> float:
+    def _get_reward(self):
         """
-        Compute the reward for achieving a given goal.
+        Function to get a reward from the environment.
 
         This method should be implemented by subclasses to return a scalar reward value representing how well the agent
         is doing in the current episode. The reward could be based on the distance to a goal, the amount of time taken
         to reach a goal, or any other metric that can be used to measure how well the agent is doing.
 
-        Args:
-            achieved_goal (Any): The achieved goal representing the current state of the environment.
-            desired_goal (Any): The desired goal representing the target state of the environment.
-            info (dict): Additional information about the environment.
-
         Returns:
-            reward (float): The reward for achieving the given goal.
+            A scalar reward value representing how well the agent is doing in the current episode.
         """
-
         raise NotImplementedError()
 
     def _is_done(self):
@@ -277,23 +311,5 @@ class MyRealRobotGoalEnv(RealGoalEnv.RealGoalEnv):
         This method should be implemented by subclasses to set any initial parameters or state variables for the
         environment. This could include resetting joint positions, resetting sensor readings, or any other initial
         setup that needs to be performed at the start of each episode.
-        """
-        raise NotImplementedError()
-
-    def _get_achieved_goal(self):
-        """
-        Get the achieved goal from the environment.
-
-        Returns:
-            achieved_goal (Any): The achieved goal representing the current state of the environment.
-        """
-        raise NotImplementedError()
-
-    def _get_desired_goal(self):
-        """
-        Get the desired goal from the environment.
-
-        Returns:
-            desired_goal (Any): The desired goal representing the target state of the environment.
         """
         raise NotImplementedError()
