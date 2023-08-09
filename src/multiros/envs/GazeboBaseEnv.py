@@ -208,10 +208,10 @@ class GazeboBaseEnv(gym.Env):
             gazebo_core.gazebo_step(steps=self.num_gazebo_steps)
 
         # Get the observation, reward, and done flag
+        self.info = {}
         self.observation = self._get_observation()
         self.reward = self._get_reward()
         self.done = self._is_done()
-        self.info = {}
 
         # rospy.loginfo(self.MAGENTA + "*************** End Step Env" + self.ENDC)
 
