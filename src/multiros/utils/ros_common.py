@@ -568,7 +568,7 @@ def ros_node_launcher(pkg_name, node_name, launch_master=False, launch_new_term=
         output (str): log, screen, or None
         ros_port (str): The ROS_MASTER_URI port (optional).
         gazebo_port (str): The GAZEBO_MASTER_URI port (optional).
-        args (list of str): Args to pass.
+        args (str): Args to pass.
 
     Returns:
         tuple[str, str, bool]: ROS Master port, GAZEBO Master port and True if the node was launched successfully,
@@ -607,7 +607,7 @@ def ros_node_launcher(pkg_name, node_name, launch_master=False, launch_new_term=
     term_cmd = construct_rosrun_command(pkg_name, node_name, name=name, ns=ns, output=output)
 
     if args is not None:
-        term_cmd += " " + " ".join(args)
+        term_cmd += " " + args
 
     if launch_new_term:
         term_cmd = f"xterm -e '{term_cmd}'"
