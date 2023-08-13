@@ -1,1 +1,1 @@
-from frobs_rl.wrappers import NormalizeActionWrapper, NormalizeObservWrapper, TimeLimitWrapper
+from multiros.wrappers import NormalizeActionWrapper, NormalizeObservWrapper, TimeLimitWrapper
