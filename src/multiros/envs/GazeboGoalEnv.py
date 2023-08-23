@@ -28,7 +28,8 @@ class GazeboGoalEnv(gym.GoalEnv):
                  reset_controllers: bool = False, reset_mode: str = "world", sim_step_mode: int = 1,
                  num_gazebo_steps: int = 1, gazebo_max_update_rate: float = None, gazebo_timestep: float = None,
                  kill_rosmaster: bool = True, kill_gazebo: bool = True, clean_logs: bool = False,
-                 ros_port: str = None, gazebo_port: str = None, gazebo_pid=None, seed: int = None):
+                 ros_port: str = None, gazebo_port: str = None, gazebo_pid=None, seed: int = None,
+                 unpause_pause_physics: bool = True):
 
         """
         Initialize the GazeboGoalEnv.
@@ -66,6 +67,7 @@ class GazeboGoalEnv(gym.GoalEnv):
             gazebo_port (str): The GAZEBO_MASTER_URI port.
             gazebo_pid (subprocess.Popen): A subprocess.Popen object representing the running Gazebo instance
             seed (int): Seed for random number generator
+            unpause_pause_physics (bool): Whether to unpause and pause Gazebo before and after each step.
 
         """
 
@@ -91,6 +93,7 @@ class GazeboGoalEnv(gym.GoalEnv):
         self.gazebo_port = gazebo_port
         self.gazebo_pid = gazebo_pid
         self.random_seed = seed
+        self.unpause_pause_physics = unpause_pause_physics
 
         self.info = {}
         self.observation = None
@@ -159,9 +162,13 @@ class GazeboGoalEnv(gym.GoalEnv):
         Reset the controllers
         """
         if self.reset_controllers:
-            gazebo_core.unpause_gazebo()
+            if self.unpause_pause_physics:
+                gazebo_core.unpause_gazebo()
+
             ros_controllers.reset_controllers(controller_list=self.controllers_list, ns=self.namespace)
-            gazebo_core.pause_gazebo()
+
+            if self.unpause_pause_physics:
+                gazebo_core.pause_gazebo()
 
         rospy.loginfo(self.CYAN + "End init GazeboGoalEnv" + self.ENDC)
 
@@ -202,9 +209,13 @@ class GazeboGoalEnv(gym.GoalEnv):
 
         # Unpause Gazebo, apply the action, pause Gazebo
         if self.sim_step_mode == 1:
-            gazebo_core.unpause_gazebo()
+            if self.unpause_pause_physics:
+                gazebo_core.unpause_gazebo()
+
             self._set_action(action)
-            gazebo_core.pause_gazebo()
+
+            if self.unpause_pause_physics:
+                gazebo_core.pause_gazebo()
 
         # If using the gazebo step command
         elif self.sim_step_mode == 2:
@@ -390,17 +401,27 @@ class GazeboGoalEnv(gym.GoalEnv):
         """
 
         # Pause Gazebo and reset it
-        gazebo_core.pause_gazebo()
+        if self.unpause_pause_physics:
+            gazebo_core.pause_gazebo()
+
         gazebo_core.reset_gazebo(reset_type=self.reset_mode)
 
         # Reset the controllers
         if self.reset_controllers:
-            gazebo_core.unpause_gazebo()
+            if self.unpause_pause_physics:
+                gazebo_core.unpause_gazebo()
+
             ros_controllers.reset_controllers(controller_list=self.controllers_list, ns=self.namespace)
-            gazebo_core.pause_gazebo()
+
+            if self.unpause_pause_physics:
+                gazebo_core.pause_gazebo()
 
         # Unpause Gazebo and check the connection status
-        gazebo_core.unpause_gazebo()
+        if self.unpause_pause_physics:
+            gazebo_core.unpause_gazebo()
+
         self._check_connection_and_readiness()
         self._set_init_params()
-        gazebo_core.pause_gazebo()
+
+        if self.unpause_pause_physics:
+            gazebo_core.pause_gazebo()
