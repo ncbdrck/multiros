@@ -112,12 +112,13 @@ class MoveitMultiros(object):
         helper fns
     """
 
-    def arm_execute_pose(self, pose: Pose) -> bool:
+    def arm_execute_pose(self, pose: Pose, async_move: bool = False) -> bool:
         """
         Execute a pose with the robot arm.
 
         Args:
             pose (Pose): The target pose for the robot arm.
+            async_move (bool): Whether to execute the trajectory asynchronously or not (Optional).
 
         Returns:
             bool: The result of the trajectory execution.
@@ -129,7 +130,7 @@ class MoveitMultiros(object):
         self.robot_arm.set_pose_target(pose)
 
         # Execute the trajectory to reach the target pose
-        result = self.arm_execute_trajectory()
+        result = self.arm_execute_trajectory(async_move=async_move)
 
         # Clear the pose targets
         self.robot_arm.clear_pose_targets()
@@ -138,12 +139,13 @@ class MoveitMultiros(object):
             gazebo_core.pause_gazebo()
         return result
 
-    def arm_execute_joint_trajectory(self, joint_target_values: List[float]) -> bool:
+    def arm_execute_joint_trajectory(self, joint_target_values: List[float], async_move: bool = False) -> bool:
         """
         Execute a joint trajectory with the robot arm.
 
         Args:
             joint_target_values (List[float]): The target joint values for the robot arm.
+            async_move (bool): Whether to execute the trajectory asynchronously or not (Optional).
 
         Returns:
             bool: The result of the trajectory execution.
@@ -169,19 +171,20 @@ class MoveitMultiros(object):
         self.robot_arm.set_joint_value_target(joint_goal)
 
         # Execute the trajectory to reach the target joint values
-        result = self.arm_execute_trajectory()
+        result = self.arm_execute_trajectory(async_move=async_move)
 
         if self.pause_gazebo:
             gazebo_core.pause_gazebo()
 
         return result
 
-    def gripper_execute_joint_command(self, target_joint_values: List[float]) -> bool:
+    def gripper_execute_joint_command(self, target_joint_values: List[float], async_move: bool = False) -> bool:
         """
         Execute a joint command with the gripper.
 
         Args:
             target_joint_values (List[float]): The target joint values for the gripper.
+            async_move (bool): Whether to execute the trajectory asynchronously or not (Optional).
 
         Returns:
             bool: The result of the command execution.
@@ -203,33 +206,47 @@ class MoveitMultiros(object):
         if self.pause_gazebo:
             gazebo_core.unpause_gazebo()
 
-        # Move the gripper to the target joint values
-        result = self.gripper.go(gripper_joints, wait=True)
+        if async_move:
+            self.gripper.stop()
 
-        # Stop the gripper from moving
-        self.gripper.stop()
+            # Move the gripper to the target joint values
+            result = self.gripper.go(gripper_joints, wait=False)
+
+        else:
+            # Move the gripper to the target joint values
+            result = self.gripper.go(gripper_joints, wait=True)
+
+            # Stop the gripper from moving
+            self.gripper.stop()
 
         if self.pause_gazebo:
             gazebo_core.pause_gazebo()
 
         return result
 
-    def arm_execute_trajectory(self) -> bool:
+    def arm_execute_trajectory(self, async_move: bool = False) -> bool:
         """
         Execute a trajectory with the robot arm.
+
+        Args:
+            async_move (bool): Whether to execute the trajectory asynchronously or not (Optional).
 
         Returns:
             bool: The result of the trajectory execution.
         """
-        # Plan and execute a trajectory to reach a previously set target
-        # plan = self.robot_arm.plan()
-        # result = self.robot_arm.execute(plan, wait=True)
 
-        # Execute the trajectory to reach the target
-        result = self.robot_arm.go(wait=True)
+        # for async move
+        if async_move:
+            self.robot_arm.stop()  # stop the robot arm from moving
 
-        # Stop the robot arm from moving
-        self.robot_arm.stop()
+            # Execute the trajectory to reach the target
+            result = self.robot_arm.go(wait=False)
+        else:
+            # Execute the trajectory to reach the target
+            result = self.robot_arm.go(wait=True)
+
+            # Stop the robot arm from moving
+            self.robot_arm.stop()
 
         return result
 
@@ -336,13 +353,14 @@ class MoveitMultiros(object):
     """
 
     def set_trajectory_ee(self, position: Union[List[float], np.ndarray],
-                          orientation: Union[List[float], np.ndarray] = None) -> bool:
+                          orientation: Union[List[float], np.ndarray] = None, async_move: bool = False) -> bool:
         """
         Set a pose target for the end effector of the robot arm.
 
         Args:
             position (Union[List[float], np.ndarray]): The target position for the end effector.
             orientation (Union[List[float], np.ndarray]): The target orientation for the end effector (Optional).
+            async_move (bool): Whether to execute the trajectory asynchronously or not (Optional).
 
         Returns:
             bool: The result of the trajectory execution.
@@ -372,14 +390,15 @@ class MoveitMultiros(object):
             ee_target.orientation.w = orientation[3]
 
         # Execute the trajectory to move the end effector to the desired position and orientation
-        return self.arm_execute_pose(ee_target)
+        return self.arm_execute_pose(ee_target, async_move=async_move)
 
-    def set_trajectory_joints(self, q_positions: Union[List[float], np.ndarray]) -> bool:
+    def set_trajectory_joints(self, q_positions: Union[List[float], np.ndarray], async_move: bool = False) -> bool:
         """
         Set a joint position target for the arm joints.
 
         Args:
             q_positions (Union[List[float], np.ndarray]): The target joint positions for the robot arm.
+            async_move (bool): Whether to execute the trajectory asynchronously or not (Optional).
 
         Returns:
             bool: The result of the trajectory execution.
@@ -389,14 +408,15 @@ class MoveitMultiros(object):
             q_positions = q_positions.tolist()
 
         # Execute a joint trajectory to move the arm to the desired joint positions
-        return self.arm_execute_joint_trajectory(q_positions)
+        return self.arm_execute_joint_trajectory(q_positions, async_move=async_move)
 
-    def set_gripper_joints(self, joint_positions: Union[List[float], np.ndarray]) -> bool:
+    def set_gripper_joints(self, joint_positions: Union[List[float], np.ndarray], async_move: bool = False) -> bool:
         """
         Set a joint position target for the gripper joints.
 
         Args:
             joint_positions (Union[List[float], np.ndarray]): The target joint positions for the gripper.
+            async_move (bool): Whether to execute the trajectory asynchronously or not (Optional).
 
         Returns:
             bool: The result of the command execution.
@@ -406,7 +426,7 @@ class MoveitMultiros(object):
             joint_positions = joint_positions.tolist()
 
         # Execute a joint command to move the gripper to the desired joint positions
-        return self.gripper_execute_joint_command(joint_positions)
+        return self.gripper_execute_joint_command(joint_positions, async_move=async_move)
 
     def get_robot_pose(self) -> PoseStamped:
         """
@@ -660,9 +680,3 @@ class MoveitMultiros(object):
             gazebo_core.pause_gazebo()
 
         return result
-
-
-
-
-
-
