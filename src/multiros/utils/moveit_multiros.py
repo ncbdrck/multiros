@@ -48,9 +48,12 @@ class MoveitMultiros(object):
     You can then call the various methods provided by this class to control your robot.
     """
 
-    def __init__(self, arm_name: str, gripper_name: str = None, robot_description: str = None, ns: str = None):
+    def __init__(self, arm_name: str, gripper_name: str = None, robot_description: str = None, ns: str = None,
+                 pause_gazebo: bool = True):
 
         rospy.loginfo("Initializing MoveitMultiros")
+
+        self.pause_gazebo = pause_gazebo
 
         # Initialize MoveIt! commander
         moveit_commander.roscpp_initialize(sys.argv)
@@ -119,7 +122,8 @@ class MoveitMultiros(object):
         Returns:
             bool: The result of the trajectory execution.
         """
-        gazebo_core.unpause_gazebo()
+        if self.pause_gazebo:
+            gazebo_core.unpause_gazebo()
 
         # Set the pose target for the robot arm
         self.robot_arm.set_pose_target(pose)
@@ -130,7 +134,8 @@ class MoveitMultiros(object):
         # Clear the pose targets
         self.robot_arm.clear_pose_targets()
 
-        gazebo_core.pause_gazebo()
+        if self.pause_gazebo:
+            gazebo_core.pause_gazebo()
         return result
 
     def arm_execute_joint_trajectory(self, joint_target_values: List[float]) -> bool:
@@ -157,7 +162,8 @@ class MoveitMultiros(object):
         for i in range(len(joint_target_values)):
             joint_goal[i] = joint_target_values[i]
 
-        gazebo_core.unpause_gazebo()
+        if self.pause_gazebo:
+            gazebo_core.unpause_gazebo()
 
         # Set the joint value target for the robot arm
         self.robot_arm.set_joint_value_target(joint_goal)
@@ -165,7 +171,8 @@ class MoveitMultiros(object):
         # Execute the trajectory to reach the target joint values
         result = self.arm_execute_trajectory()
 
-        gazebo_core.pause_gazebo()
+        if self.pause_gazebo:
+            gazebo_core.pause_gazebo()
 
         return result
 
@@ -193,7 +200,8 @@ class MoveitMultiros(object):
         for i in range(len(target_joint_values)):
             gripper_joints[i] = float(target_joint_values[i])
 
-        gazebo_core.unpause_gazebo()
+        if self.pause_gazebo:
+            gazebo_core.unpause_gazebo()
 
         # Move the gripper to the target joint values
         result = self.gripper.go(gripper_joints, wait=True)
@@ -201,7 +209,8 @@ class MoveitMultiros(object):
         # Stop the gripper from moving
         self.gripper.stop()
 
-        gazebo_core.pause_gazebo()
+        if self.pause_gazebo:
+            gazebo_core.pause_gazebo()
 
         return result
 
@@ -406,9 +415,13 @@ class MoveitMultiros(object):
         Returns:
             PoseStamped: The current pose of the robot arm.
         """
-        gazebo_core.unpause_gazebo()
+        if self.pause_gazebo:
+            gazebo_core.unpause_gazebo()
+
         robot_pose = self.robot_pose()
-        gazebo_core.pause_gazebo()
+
+        if self.pause_gazebo:
+            gazebo_core.pause_gazebo()
         return robot_pose
 
     def get_robot_rpy(self) -> List[float]:
@@ -418,9 +431,13 @@ class MoveitMultiros(object):
         Returns:
             List[float]: The current roll, pitch, and yaw angles of the robot arm.
         """
-        gazebo_core.unpause_gazebo()
+        if self.pause_gazebo:
+            gazebo_core.unpause_gazebo()
+
         robot_rpy = self.robot_rpy()
-        gazebo_core.pause_gazebo()
+
+        if self.pause_gazebo:
+            gazebo_core.pause_gazebo()
         return robot_rpy
 
     def get_gripper_pose(self, link: str = "") -> PoseStamped:
@@ -433,9 +450,13 @@ class MoveitMultiros(object):
         Returns:
             PoseStamped: The current pose of the gripper.
         """
-        gazebo_core.unpause_gazebo()
+        if self.pause_gazebo:
+            gazebo_core.unpause_gazebo()
+
         gripper_pose = self.gripper_pose(gripper_link=link)
-        gazebo_core.pause_gazebo()
+
+        if self.pause_gazebo:
+            gazebo_core.pause_gazebo()
         return gripper_pose
 
     def get_gripper_rpy(self, link: str = "") -> List[float]:
@@ -448,9 +469,13 @@ class MoveitMultiros(object):
         Returns:
             List[float]: The current roll, pitch, and yaw angles of the gripper.
         """
-        gazebo_core.unpause_gazebo()
+        if self.pause_gazebo:
+            gazebo_core.unpause_gazebo()
+
         gripper_rpy = self.gripper_rpy(gripper_link=link)
-        gazebo_core.pause_gazebo()
+
+        if self.pause_gazebo:
+            gazebo_core.pause_gazebo()
         return gripper_rpy
 
     def get_joint_angles_robot_arm(self) -> List[float]:
@@ -460,9 +485,13 @@ class MoveitMultiros(object):
         Returns:
             List[float]: The current joint angles of the robot arm.
         """
-        gazebo_core.unpause_gazebo()
+        if self.pause_gazebo:
+            gazebo_core.unpause_gazebo()
+
         robot_joint_angles = self.joint_angles_arm()
-        gazebo_core.pause_gazebo()
+
+        if self.pause_gazebo:
+            gazebo_core.pause_gazebo()
         return robot_joint_angles
 
     def get_joint_angles_gripper(self) -> List[float]:
@@ -472,9 +501,13 @@ class MoveitMultiros(object):
         Returns:
             List[float]: The current joint angles of the gripper.
         """
-        gazebo_core.unpause_gazebo()
+        if self.pause_gazebo:
+            gazebo_core.unpause_gazebo()
+
         gripper_joint_angles = self.joint_angles_gripper()
-        gazebo_core.pause_gazebo()
+
+        if self.pause_gazebo:
+            gazebo_core.pause_gazebo()
         return gripper_joint_angles
 
     def get_joint_angles(self) -> List[float]:
@@ -484,9 +517,13 @@ class MoveitMultiros(object):
         Returns:
             List[float]: The current joint angles of both the robot arm and gripper.
         """
-        gazebo_core.unpause_gazebo()
+        if self.pause_gazebo:
+            gazebo_core.unpause_gazebo()
+
         joint_angles = self.joint_angles()
-        gazebo_core.pause_gazebo()
+
+        if self.pause_gazebo:
+            gazebo_core.pause_gazebo()
         return joint_angles
 
     def check_goal(self, goal: Union[List[float], np.ndarray]) -> bool:
@@ -518,9 +555,13 @@ class MoveitMultiros(object):
         Returns:
             PoseStamped: A random pose for the robot arm.
         """
-        gazebo_core.unpause_gazebo()
+        if self.pause_gazebo:
+            gazebo_core.unpause_gazebo()
+
         random_pose = self.robot_arm.get_random_pose()
-        gazebo_core.pause_gazebo()
+
+        if self.pause_gazebo:
+            gazebo_core.pause_gazebo()
         return random_pose
 
     def set_planning_time(self, planning_time: float):
@@ -598,8 +639,9 @@ class MoveitMultiros(object):
         # Set the waypoints for the trajectory
         self.robot_arm.set_pose_targets(waypoints)
 
-        # unpause gazebo
-        gazebo_core.unpause_gazebo()
+        if self.pause_gazebo:
+            # unpause gazebo
+            gazebo_core.unpause_gazebo()
 
         # Plan a cartesian path to move the end effector through the waypoints
         plan, fraction = self.robot_arm.compute_cartesian_path(waypoints, eef_step, jump_threshold, avoid_collisions)
@@ -613,8 +655,9 @@ class MoveitMultiros(object):
         # Clear the pose targets
         self.robot_arm.clear_pose_targets()
 
-        # pause gazebo
-        gazebo_core.unpause_gazebo()
+        if self.pause_gazebo:
+            # pause gazebo
+            gazebo_core.pause_gazebo()
 
         return result
 
