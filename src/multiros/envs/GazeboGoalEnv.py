@@ -29,7 +29,7 @@ class GazeboGoalEnv(gym.GoalEnv):
                  num_gazebo_steps: int = 1, gazebo_max_update_rate: float = None, gazebo_timestep: float = None,
                  kill_rosmaster: bool = True, kill_gazebo: bool = True, clean_logs: bool = False,
                  ros_port: str = None, gazebo_port: str = None, gazebo_pid=None, seed: int = None,
-                 unpause_pause_physics: bool = True):
+                 unpause_pause_physics: bool = True, action_cycle_time: float = 0.0):
 
         """
         Initialize the GazeboGoalEnv.
@@ -68,6 +68,7 @@ class GazeboGoalEnv(gym.GoalEnv):
             gazebo_pid (subprocess.Popen): A subprocess.Popen object representing the running Gazebo instance
             seed (int): Seed for random number generator
             unpause_pause_physics (bool): Whether to unpause and pause Gazebo before and after each step.
+            action_cycle_time (float): The time to wait between applying actions.
 
         """
 
@@ -94,6 +95,7 @@ class GazeboGoalEnv(gym.GoalEnv):
         self.gazebo_pid = gazebo_pid
         self.random_seed = seed
         self.unpause_pause_physics = unpause_pause_physics
+        self.action_cycle_time = action_cycle_time
 
         self.info = {}
         self.observation = None
@@ -221,6 +223,10 @@ class GazeboGoalEnv(gym.GoalEnv):
         elif self.sim_step_mode == 2:
             self._set_action(action)
             gazebo_core.gazebo_step(steps=self.num_gazebo_steps)
+
+        # If using the action cycle time
+        if self.action_cycle_time > 0.0:
+            rospy.sleep(self.action_cycle_time)
 
         # Get the observation, reward, and done flag
         self.info = {}
