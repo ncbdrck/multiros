@@ -26,7 +26,6 @@ It has the following methods (Main functions),
     20. set_trajectory_cartesian: Set a cartesian trajectory for the end effector of the robot arm.
     21. stop_arm: Stop the robot arm from moving.
     22. stop_gripper: Stop the gripper from moving.
-
 """
 import sys
 import moveit_commander
