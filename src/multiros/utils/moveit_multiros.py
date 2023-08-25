@@ -24,6 +24,8 @@ It has the following methods (Main functions),
     18. set_max_acceleration_scaling_factor: Set the maximum acceleration scaling factor for the robot arm.
     19. set_max_velocity_scaling_factor: Set the maximum velocity scaling factor for the robot arm.
     20. set_trajectory_cartesian: Set a cartesian trajectory for the end effector of the robot arm.
+    21. stop_arm: Stop the robot arm from moving.
+    22. stop_gripper: Stop the gripper from moving.
 
 """
 import sys
@@ -249,6 +251,18 @@ class MoveitMultiros(object):
             self.robot_arm.stop()
 
         return result
+
+    def stop_arm(self):
+        """
+        Stop the robot arm from moving.
+        """
+        self.robot_arm.stop()
+
+    def stop_gripper(self):
+        """
+        Stop the gripper from moving.
+        """
+        self.gripper.stop()
 
     def robot_pose(self):
         """
