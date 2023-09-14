@@ -10,17 +10,25 @@ class TimeLimitWrapper(gym.Wrapper):
     Args:
         env (gym.Env): The environment to wrap.
         max_steps (int): The maximum number of steps per episode.
+        termination_action (list): The action to take when the episode is terminated (Optional).
     """
 
-    def __init__(self, env, max_steps=100):
+    def __init__(self, env, max_steps=100, termination_action=None):
         # init Wrapper
         super().__init__(env)
+
+        # If no termination action is given, set it to an empty list
+        if termination_action is None:
+            termination_action = []
 
         # Maximum steps for the env
         self.max_steps = max_steps
 
         # counter to track the current steps
         self.counter = 0
+
+        # Termination action
+        self.termination_action = termination_action
 
     def step(self, action):
         """
@@ -48,6 +56,10 @@ class TimeLimitWrapper(gym.Wrapper):
 
             # This is to log the success rate in stable_baselines3
             info['is_success'] = 0.0
+
+            # Take the termination action
+            if len(self.termination_action) > 0:
+                _, _, _, _ = self.env.step(self.termination_action)
 
         return observation, reward, done, info
 
