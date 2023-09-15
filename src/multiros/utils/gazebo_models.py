@@ -311,18 +311,18 @@ def spawn_robot_in_gazebo(pkg_name: str, model_urdf_file: str, model_urdf_folder
     # Initialize the Robot State Publisher node set the publishing freq
     # check for publish frequency
     if pub_freq is not None:
-        # Remove any trailing slashes from ns
-
-        if ns != "/":
-            ns = ns.rstrip('/')
-            rospy.set_param(ns + "/robot_state_publisher/publish_frequency", pub_freq)
-        else:
-            rospy.set_param("/robot_state_publisher/publish_frequency", pub_freq)
-
-    # we don't need the first two since we are not launching a new roscore
-    _, _, launch_done = ros_common.ros_node_launcher(pkg_name="robot_state_publisher",
-                                                     node_name="robot_state_publisher",
-                                                     launch_new_term=rob_st_term, ns=ns)
+        _, _, launch_done = ros_common.ros_node_launcher(pkg_name="robot_state_publisher",
+                                                         node_name="robot_state_publisher",
+                                                         launch_new_term=rob_st_term,
+                                                         ns=ns,
+                                                         args=[f"publish_frequency:={pub_freq}"]
+                                                         )
+    else:
+        # we don't need the first two since we are not launching a new roscore
+        _, _, launch_done = ros_common.ros_node_launcher(pkg_name="robot_state_publisher",
+                                                         node_name="robot_state_publisher",
+                                                         launch_new_term=rob_st_term,
+                                                         ns=ns)
 
     if launch_done:
         rospy.loginfo("Robot state publisher initialized")
