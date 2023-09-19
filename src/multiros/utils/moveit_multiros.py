@@ -26,6 +26,7 @@ It has the following methods (Main functions),
     20. set_trajectory_cartesian: Set a cartesian trajectory for the end effector of the robot arm.
     21. stop_arm: Stop the robot arm from moving.
     22. stop_gripper: Stop the gripper from moving.
+    23. check_goal_joint_pos: Check if a goal position is reachable by the robot arm.
 """
 import sys
 import moveit_commander
@@ -361,6 +362,34 @@ class MoveitMultiros(object):
 
         return result
 
+    def check_goal_reachable_joint_pos(self, joint_pos: Union[List[float], np.ndarray]) -> bool:
+        """
+        Check if a goal position is reachable by the robot arm.
+
+        Args:
+            joint_pos (Union[List[float], np.ndarray]): joint positions.
+
+        Returns:
+            bool: Whether the goal position is reachable or not.
+        """
+        # Convert goal to list if it is a numpy array
+        if isinstance(joint_pos, np.ndarray):
+            joint_pos = joint_pos.tolist()
+
+        # Set the position target of the robot arm to the goal
+        self.robot_arm.set_joint_value_target(joint_pos)
+
+        # Plan a trajectory to reach the goal
+        plan = self.robot_arm.plan()
+
+        # Get the result of the plan
+        result = plan[0]
+
+        # Clear the pose targets
+        self.robot_arm.clear_pose_targets()
+
+        return result
+
     """
             Main functions we can call from the object
     """
@@ -571,6 +600,19 @@ class MoveitMultiros(object):
             bool: Whether the goal position is reachable or not.
         """
         return self.is_goal_reachable(goal)
+
+    def check_goal_joint_pos(self, joint_pos: Union[List[float], np.ndarray]) -> bool:
+        """
+
+        Check if a goal position is reachable by the robot arm.
+
+        Args:
+            joint_pos (Union[List[float], np.ndarray]): The target position for the robot arm.
+
+        Returns:
+            bool: Whether the goal position is reachable or not.
+        """
+        return self.check_goal_reachable_joint_pos(joint_pos)
 
     def get_randomJointVals(self) -> List[float]:
         """
