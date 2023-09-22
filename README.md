@@ -2,7 +2,7 @@
 
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
-MultiROS is an open-source Robot Operating System ([ROS](http://wiki.ros.org/))-based simulation environment designed for concurrent deep reinforcement learning. It provides a flexible and scalable framework for training and evaluating reinforcement learning agents in complex robotic tasks.
+MultiROS is an open-source Robot Operating System ([ROS](http://wiki.ros.org/))-based simulation environment designed for concurrent deep reinforcement learning. It provides a flexible and scalable framework for training and evaluating reinforcement learning agents for complex robotic tasks.
 
 This package supports training robots in both simulation and the real world. The simulation environment is based on [Gazebo](https://gazebosim.org/), providing a realistic simulation platform for testing and developing reinforcement learning algorithms. 
 
