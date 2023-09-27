@@ -209,7 +209,8 @@ class MoveitMultiros(object):
             gazebo_core.unpause_gazebo()
 
         if async_move:
-            self.gripper.stop()
+            # self.gripper.stop()
+            self.gripper.set_start_state_to_current_state()  # set the start state to the current state
 
             # Move the gripper to the target joint values
             result = self.gripper.go(gripper_joints, wait=False)
@@ -239,7 +240,8 @@ class MoveitMultiros(object):
 
         # for async move
         if async_move:
-            self.robot_arm.stop()  # stop the robot arm from moving
+            # self.robot_arm.stop()  # stop the robot arm from moving
+            self.robot_arm.set_start_state_to_current_state()  # set the start state to the current state
 
             # Execute the trajectory to reach the target
             result = self.robot_arm.go(wait=False)
