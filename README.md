@@ -88,6 +88,11 @@ To get started with MultiROS, follow these steps:
    catkin build
    source devel/setup.bash
     ```
+## Usage
+
+Refer to the [templates](https://github.com/ncbdrck/multiros/tree/main/src/multiros/templates) or the [examples](https://github.com/ncbdrck/reactorx200_ros_reacher) to see how MultiROS can create a simulation environment for RL applications.
+
+The installation instructions for the examples are provided in the respective repositories.
 
 ## License
 
