@@ -39,7 +39,8 @@ class MyRobotEnv(GazeboBaseEnv.GazeboBaseEnv):
     Superclass for all Robot environments.
     """
 
-    def __init__(self, ros_port: str = None, gazebo_port: str = None, gazebo_pid=None, seed: int = None):
+    def __init__(self, ros_port: str = None, gazebo_port: str = None, gazebo_pid=None, seed: int = None,
+                 real_time: bool = False, action_cycle_time=0.0):
         """
         Initializes a new Robot Environment
 
@@ -60,9 +61,21 @@ class MyRobotEnv(GazeboBaseEnv.GazeboBaseEnv):
             ros_common.change_ros_gazebo_master(ros_port=ros_port, gazebo_port=gazebo_port)
 
         """
+        parameters
+        """
+        self.real_time = real_time  # if True, the simulation will run in real time
+
+        # we don't need to pause/unpause gazebo if we are running in real time
+        if self.real_time:
+            unpause_pause_physics = False
+        else:
+            unpause_pause_physics = True
+
+        """
         Unpause Gazebo
         """
-        gazebo_core.unpause_gazebo()
+        if not self.real_time:
+            gazebo_core.unpause_gazebo()
 
         """
         Spawning the robot in Gazebo
@@ -170,20 +183,33 @@ class MyRobotEnv(GazeboBaseEnv.GazeboBaseEnv):
             reset_controllers=reset_controllers, reset_mode=reset_mode, sim_step_mode=sim_step_mode,
             num_gazebo_steps=num_gazebo_steps, gazebo_max_update_rate=gazebo_max_update_rate,
             gazebo_timestep=gazebo_timestep, kill_rosmaster=kill_rosmaster, kill_gazebo=kill_gazebo,
-            clean_logs=clean_logs, ros_port=ros_port, gazebo_port=gazebo_port, gazebo_pid=gazebo_pid, seed=seed)
+            clean_logs=clean_logs, ros_port=ros_port, gazebo_port=gazebo_port, gazebo_pid=gazebo_pid, seed=seed,
+            unpause_pause_physics=unpause_pause_physics, action_cycle_time=action_cycle_time)
 
         """
         Define ros publisher, subscribers and services for robot and sensors
         """
         # example: joint state
+        # if namespace is not None and namespace != '/':
+        #     self.joint_state_topic = namespace + "/joint_states"
+        # else:
+        #     self.joint_state_topic = "/joint_states"
+        #
         # self.joint_state_sub = rospy.Subscriber(self.joint_state_topic, JointState, self.joint_state_callback)
         # self.joint_state = JointState()
 
         # example: moveit package
-        # ros_common.ros_launch_launcher(pkg_name="interbotix_xsarm_moveit_interface",
-        #                                launch_file_name="xsarm_moveit_interface.launch",
-        #                                args=["robot_model:=rx200", "dof:=5", "use_python_interface:=true",
-        #                                      "use_moveit_rviz:=false"])
+        # if self.real_time:
+        #     # we don't need to pause/unpause gazebo if we are running in real time
+        #     self.move_RX200_object = MoveitMultiros(arm_name='interbotix_arm',
+        #                                             gripper_name='interbotix_gripper',
+        #                                             robot_description="rx200/robot_description",
+        #                                             ns="rx200", pause_gazebo=False)
+        # else:
+        #     self.move_RX200_object = MoveitMultiros(arm_name='interbotix_arm',
+        #                                             gripper_name='interbotix_gripper',
+        #                                             robot_description="rx200/robot_description",
+        #                                             ns="rx200")
 
         # example: object detection
         # ros_common.ros_launch_launcher(pkg_name="reactorx200_push_vision", launch_file_name="cube_detection.launch")
@@ -210,8 +236,11 @@ class MyRobotEnv(GazeboBaseEnv.GazeboBaseEnv):
         """
         Finished __init__ method
         """
-        gazebo_core.pause_gazebo()
-        rospy.loginfo("End Init Custom Robot Env")
+        if not self.real_time:
+            gazebo_core.pause_gazebo()
+        else:
+            gazebo_core.unpause_gazebo()  # this is because loading models will pause the simulation
+        rospy.loginfo("End Init RX200RobotEnv")
 
     # ---------------------------------------------------
     #   Custom methods for the Custom Robot Environment
