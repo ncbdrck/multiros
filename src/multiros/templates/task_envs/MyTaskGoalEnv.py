@@ -30,7 +30,8 @@ class MyTaskGoalEnv(MyRobotGoalEnv.MyRobotGoalEnv):
     """
 
     def __init__(self, launch_gazebo: bool = True, new_roscore: bool = True, roscore_port: str = None,
-                 gazebo_paused: bool = False, gazebo_gui: bool = False, seed: int = None):
+                 gazebo_paused: bool = False, gazebo_gui: bool = False, seed: int = None, real_time: bool = True,
+                 action_cycle_time: float = 0.0):
         """
 
         In the initialization statement, you can initialize any desired number and type of variables and pass the
@@ -160,7 +161,8 @@ class MyTaskGoalEnv(MyRobotGoalEnv.MyRobotGoalEnv):
         """
         Init super class.
         """
-        super().__init__(ros_port=ros_port, gazebo_port=gazebo_port, gazebo_pid=gazebo_pid, seed=seed)
+        super().__init__(ros_port=ros_port, gazebo_port=gazebo_port, gazebo_pid=gazebo_pid, seed=seed,
+                         real_time=real_time, action_cycle_time=action_cycle_time)
 
         """
         Finished __init__ method
