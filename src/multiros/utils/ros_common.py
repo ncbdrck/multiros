@@ -390,16 +390,32 @@ def ros_kill_master(ros_port) -> bool:
         bool: True if the master was killed, False otherwise.
     """
 
+    # term_cmd = "pkill -f 'roscore -p " + ros_port + "'"
+    # subprocess.Popen("xterm -e ' " + term_cmd + "'", shell=True).wait()
+    # time.sleep(0.5)
+    #
+    # rospy.logdebug(f"Successfully killed ROS master: {ros_port}!")
+    #
+    # # Remove the ros master from the ROS_MASTER port list
+    # remove_from_rosmaster_list(ros_port)
+    #
+    # return True
+
     term_cmd = "pkill -f 'roscore -p " + ros_port + "'"
-    subprocess.Popen("xterm -e ' " + term_cmd + "'", shell=True).wait()
+    result = os.system(term_cmd)
     time.sleep(0.5)
 
-    rospy.logdebug(f"Successfully killed ROS master: {ros_port}!")
+    if result == 0:
 
-    # Remove the ros master from the ROS_MASTER port list
-    remove_from_rosmaster_list(ros_port)
+        rospy.logdebug(f"Successfully killed ROS master: {ros_port}!")
 
-    return True
+        # Remove the ros master from the ROS_MASTER port list
+        remove_from_rosmaster_list(ros_port)
+        return True
+
+    else:
+        rospy.logdebug(f"Failed to kill ROS master: {ros_port}!")
+        return False
 
 
 """
@@ -415,11 +431,21 @@ def clean_ros_logs() -> bool:
         bool: True if all the ros logs were closed.
     """
 
-    term_cmd = "rosclean purge -y"
-    subprocess.Popen("xterm -e ' " + term_cmd + "'", shell=True).wait()
-    rospy.logdebug("successfully cleaned all the ROS logs")
+    # term_cmd = "rosclean purge -y"
+    # subprocess.Popen("xterm -e ' " + term_cmd + "'", shell=True).wait()
+    # rospy.logdebug("successfully cleaned all the ROS logs")
+    # return True
 
-    return True
+    term_cmd = "rosclean purge -y"
+
+    result = os.system(term_cmd)
+
+    if result == 0:
+        rospy.logdebug("Successfully cleaned all the ROS logs")
+        return True
+    else:
+        rospy.logdebug("Failed to clean ROS logs")
+        return False
 
 
 """
