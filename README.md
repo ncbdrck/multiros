@@ -34,17 +34,7 @@ MultiROS uses Catkin as the build system for ROS packages. Install Catkin Tools 
 ```shell
 sudo apt-get install python3-catkin-tools
 ```
-### Other Packages 
-MultiROS also requires the following additional packages:
-- XTerm for terminal emulation:
-    ```shell
-    sudo apt install xterm
-    ```
-- [MoveIt](https://moveit.ros.org/) for motion planning:
-    ```shell
-    sudo apt install ros-noetic-moveit
-    ```
-  
+
 ### Create ROS Workspace
 Before using MultiROS, you need to create a ROS workspace to build and run your ROS packages. Follow these steps to create a workspace:
 ```shell
@@ -56,6 +46,33 @@ catkin build
 echo "source ~/catkin_ws/devel/setup.bash" >> ~/.bashrc
 source ~/.bashrc
 ```
+
+### Other Packages 
+MultiROS also requires the following additional packages:
+- XTerm for terminal emulation:
+    ```shell
+    sudo apt install xterm
+    ```
+- [MoveIt](https://moveit.ros.org/) for motion planning:
+    ```shell
+    sudo apt install ros-noetic-moveit
+    ```
+- [kdl_parser_py](http://wiki.ros.org/kdl_parser_py) for parsing URDF files (for ros_kinematics):
+    ```shell
+    sudo apt install ros-noetic-kdl-parser-py
+    ```
+- trac_ik_python for inverse kinematics:
+    ```shell
+  # Download and install trac_ik_python
+    cd ~/catkin_ws/src
+    git clone https://bitbucket.org/traclabs/trac_ik.git
+  
+    # Build the package
+    cd ~/catkin_ws
+    rosdep install --from-paths src --ignore-src -r -y
+    catkin build
+    source devel/setup.bash
+  ```
 
 You are now ready to proceed with the installation and usage of MultiROS.
 

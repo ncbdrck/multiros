@@ -10,9 +10,9 @@ With this class, you can calculate,
 """
 
 import numpy as np
-from urdf_parser_py.urdf import URDF
-from pykdl_utils.kdl_parser import kdl_tree_from_urdf_model
-from pykdl_utils.kdl_kinematics import KDLKinematics
+# from urdf_parser_py.urdf import URDF
+# from pykdl_utils.kdl_parser import kdl_tree_from_urdf_model
+# from pykdl_utils.kdl_kinematics import KDLKinematics
 from tf.transformations import euler_from_matrix  # Import euler_from_matrix instead of quaternion_from_euler
 
 import PyKDL as kdl
