@@ -157,7 +157,7 @@ class Kinematics_pyrobot(object):
             return False, None
 
         # Return the joint positions
-        return True, joint_positions_IK
+        return True, np.array(joint_positions_IK)
 
     def _kdl_frame_to_numpy(self, frame):
         """
@@ -398,7 +398,7 @@ class Kinematics_pykdl(object):
             rospy.logwarn("Failed to find an IK solution.")
             return False, None
 
-        return True, q_ik
+        return True, np.array(q_ik)
 
 
 if __name__ == '__main__':
