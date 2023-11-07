@@ -10,10 +10,11 @@ With this class, you can calculate,
 """
 
 import numpy as np
-# from urdf_parser_py.urdf import URDF
-# from pykdl_utils.kdl_parser import kdl_tree_from_urdf_model
-# from pykdl_utils.kdl_kinematics import KDLKinematics
-from tf.transformations import euler_from_matrix  # Import euler_from_matrix instead of quaternion_from_euler
+from urdf_parser_py.urdf import URDF
+from pykdl_utils.kdl_parser import kdl_tree_from_urdf_model
+from pykdl_utils.kdl_kinematics import KDLKinematics
+from tf.transformations import euler_from_matrix
+from tf.transformations import quaternion_matrix
 
 import PyKDL as kdl
 import copy
@@ -23,7 +24,7 @@ from trac_ik_python import trac_ik
 import rospy
 
 
-class Kinematics(object):
+class Kinematics_pyrobot(object):
     """
     This is modified from the Kinematics class in the pyrobot repo.
     link: https://github.com/facebookresearch/pyrobot/blob/b334b60842271d9d8f4ed7a97bc4e5efe8bb72d6/pyrobot_bridge/nodes/kinematics.py
@@ -259,3 +260,206 @@ class Kinematics(object):
 
         # Return position and rotations both as 1D arrays
         return True, pos.flatten(), rotations
+
+
+class Kinematics_pykdl(object):
+    """
+    Kinematics class based on pykdl_utils package.
+    https://github.com/ncbdrck/hrl-kdl
+    """
+
+    def __init__(self, robot_description_parm: str, base_link: str, end_link: str, debug=False):
+        """
+        Initialize the Kinematics class.
+
+        Args:
+            robot_description_parm: robot description parameter name including the namespace
+            base_link: base link of the robot including the namespace
+            end_link: end-effector link of the robot including the namespace
+            debug: debug mode
+        """
+
+        # Validate inputs
+        if not robot_description_parm or not base_link or not end_link:
+            raise ValueError("Inputs robot_description, base_link, and end_link must be non-empty strings.")
+
+        # load the robot urdf from parameter server
+        self.pykdl_robot = URDF.from_parameter_server(key=robot_description_parm)
+
+        # create the kdl kinematics
+        self.kdl_kin = KDLKinematics(urdf=self.pykdl_robot, base_link=base_link, end_link=end_link)
+
+        if debug:
+            # get the kdl tree from the robot urdf
+            tree = kdl_tree_from_urdf_model(self.pykdl_robot)
+
+            # Print the number of links in the tree - the rigid bodies
+            print("All Links from tree:", tree.getNrOfSegments())
+
+            # Print the number of joints in the tree - the joints
+            print("All Joints from tree:", tree.getNrOfJoints())
+
+            # get the kdl chain from the kdl tree - the kinematic chain
+            chain = tree.getChain(base_link, end_link)
+
+            # Print the number of links in the chain - the rigid bodies
+            print("Links from chain:", chain.getNrOfSegments())
+
+            # Print the number of joints in the chain - the joints
+            print("Joints from chain:", chain.getNrOfJoints())
+
+            # Print the joint names
+            print("Joint names from chain:")
+            for i in range(chain.getNrOfSegments()):
+                print(chain.getSegment(i).getJoint().getName())
+
+            # Print the link names
+            print("Link names from chain:")
+            for i in range(chain.getNrOfSegments()):
+                print(chain.getSegment(i).getName())
+
+            # # Print the link names
+            # print("Link names from URDF:")
+            # for link_name in self.pykdl_robot.link_map.keys():
+            #     print(link_name)
+            #
+            # # Print the joint names
+            # print("Joint names from URDF:")
+            # for joint_name in self.pykdl_robot.joint_map.keys():
+            #     print(joint_name)
+
+    @staticmethod
+    def rot_mat_to_quat(rot):
+        """
+        Convert the rotation matrix into quaternion.
+
+        Args:
+            rot (numpy.ndarray): the rotation matrix (shape: :math:`[3, 3]`)
+        Returns:
+            quaternion (numpy.ndarray) [x, y, z, w] (shape: :math:`[4,]`)
+        """
+        R = np.eye(4)
+        R[:3, :3] = rot
+        return tf.transformations.quaternion_from_matrix(R)
+
+    def calculate_fk(self, joint_positions, end_link=None, base_link=None, euler=True):
+        """
+        Given joint angles, compute the pose of desired_frame with respect
+        to the base frame. The desired frame must be in self.arm_link_names.
+
+        Args:
+            joint_positions (np.ndarray): Joint angles.
+            end_link (str): Desired frame. If None, the end-effector frame is used.
+            base_link (str): Base frame. If None, the base frame is used.
+            euler (bool): If True, return the orientation in Euler angles.
+
+        Returns:
+            A tuple (success, pos, rpy), where `success` is a boolean indicating success of FK,
+            and `pos` are the calculated position and `rpy` are the calculated roll, pitch, yaw.
+        """
+        # Calculate forward kinematics
+        pose_pykdl = self.kdl_kin.forward(q=joint_positions, end_link=end_link, base_link=base_link)
+
+        # Check for any errors during computation
+        if pose_pykdl is None:
+            rospy.logerr("Error computing forward kinematics with KDL.")
+            return False, None, None
+
+        # Extract position
+        position = np.array([pose_pykdl[0, 3], pose_pykdl[1, 3], pose_pykdl[2, 3]],
+                            dtype=np.float32)  # we need to convert to float32
+
+        if euler:
+            # Extract rotation matrix and convert to euler angles
+            orientation = euler_from_matrix(pose_pykdl[:3, :3], 'sxyz')
+            rotations = np.array(orientation).flatten()
+        else:
+            # Convert the rotation matrix to a quaternion
+            rotations = self.rot_mat_to_quat(pose_pykdl[:3, :3])
+
+        return True, position, rotations
+
+    def calculate_ik(self, target_pose, init_joint_positions=None):
+        """
+        Calculate the inverse kinematics for a given pose.
+
+        Args:
+            target_pose (matrix): The desired position and orientation of the end effector given as a 4x4 matrix
+            init_joint_positions (list): The initial positions of the joints from which to start the IK calculation
+
+        Returns:
+            A tuple (success, joint_positions), where `success` is a boolean indicating success of IK,
+            and `joint_positions` are the calculated joint angles.
+        """
+        # calculate inverse kinematics
+        q_ik = self.kdl_kin.inverse(pose=target_pose, q_guess=init_joint_positions)
+
+        if q_ik is None:
+            rospy.logwarn("Failed to find an IK solution.")
+            return False, None
+
+        return True, q_ik
+
+
+if __name__ == '__main__':
+    ########################################### examples ###########################################
+    # with pyrobot
+    kin = Kinematics_pyrobot(robot_description_parm='rx200/robot_description', base_link='rx200/base_link',
+                             end_link='rx200/ee_gripper_link')
+
+    # fake joint angles
+    q = np.array([0.0, 0.0, 0.0, 0.0, 0.0])  # Joint angles in radians
+
+    # desired frame
+    des_frame = 'rx200/ee_gripper_link'
+
+    # get fk
+    fk_done, pos, rpy = kin.calculate_fk(q, des_frame)
+
+    print("pyrobot fk_done:", fk_done)
+    print("pyrobot pos:", pos)
+    print("pyrobot rpy:", rpy)
+
+    # random ee pose
+    action = np.array([0.409951, 0.0, 0.276585], dtype=np.float32)
+
+    # define the pose in 1D array [x, y, z, qx, qy, qz, qw]
+    action = np.concatenate((action, np.array([0.0, 0.0, 0.0, 1.0])))
+
+    # get ik
+    ik_done, joint_positions = kin.calculate_ik(target_pose=action, tolerance=[1e-3] * 6,
+                                                init_joint_positions=q)
+
+    print("pyrobot ik_done:", ik_done)
+    print("pyrobot joint_positions:", joint_positions)
+
+    ###########################################
+    # with pykdl_utils
+    kin_pykdl = Kinematics_pykdl(robot_description_parm='rx200/robot_description', base_link='rx200/base_link',
+                                 end_link='rx200/ee_gripper_link', debug=False)
+
+    # get fk
+    fk_done, pos, rpy = kin_pykdl.calculate_fk(q)
+
+    print("py_kdl fk_done:", fk_done)
+    print("py_kdl pos:", pos)
+    print("py_kdl rpy:", rpy)
+
+    # This is your RL action which represents the desired position
+    action = np.array([0.409951, 0.0, 0.276585], dtype=np.float32)
+
+    # Default orientation in quaternion (no rotation)
+    default_orientation = np.array([0.0, 0.0, 0.0, 1.0])
+
+    # Convert the quaternion into a 4x4 rotation matrix
+    rotation_matrix = quaternion_matrix(default_orientation)
+
+    # Place the position into the translation part of the pose matrix
+    pose_matrix = np.matrix(rotation_matrix)  # Make sure it is a numpy matrix, as KDL expects
+    pose_matrix[:3, 3] = action.reshape(3, 1)  # Reshape just for safety
+
+    # get ik
+    ik_done, joint_positions = kin_pykdl.calculate_ik(target_pose=pose_matrix, init_joint_positions=q)
+
+    print("py_kdl ik_done:", ik_done)
+    print("py_kdl joint_positions:", joint_positions)
