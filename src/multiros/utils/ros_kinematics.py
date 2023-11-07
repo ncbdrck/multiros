@@ -1,12 +1,19 @@
 #!/bin/python3
 
 """
-This class provides kinematics functionality for a robot. Instead of using computation-heavy ROS packages like MoveIt,
+There are two classes in this file that provide similar functionality:
+- Kinematics_pyrobot: This is modified from the Kinematics class in the pyrobot repo.
+- Kinematics_pykdl: Kinematics class based on pykdl_utils package.
+
+These classes provide kinematics functionality for a robot. Instead of using computation-heavy ROS packages like MoveIt,
 this class uses the KDL library to perform kinematics calculations.
 
-With this class, you can calculate,
+With these classes, you can calculate,
 - Forward kinematics - compute the pose of the end-effector given the joint angles
 - Inverse kinematics - compute the joint angles given the pose of the end-effector
+
+Since both classes provide similar functionality, you can use either one of them. However, the Kinematics_pyrobot class
+is recommended since it is more flexible and provides more functionality.
 """
 
 import numpy as np
