@@ -871,6 +871,30 @@ def change_ros_master(ros_port: str) -> bool:
     return True
 
 
+def change_ros_master_multi_device(remote_ip: str, local_ip: str, remote_ros_port: str = '11311') -> bool:
+    """
+    Function to set the current ROS Master Environment Variable for multi-device communication.
+
+    Args:
+        remote_ip (str): The remote IP address.
+        local_ip (str): The local IP address.
+        remote_ros_port (str): The remote ROS_MASTER_URI port. Defaults ros port 11311.
+
+    Returns:
+        bool: True if ROS Master Environment Variables are set to new values.
+    """
+
+    # Temporarily assigning values for the ROS_MASTER_URI environment variable
+    os.environ["ROS_MASTER_URI"] = f"{remote_ip}:{remote_ros_port}"
+
+    # Temporarily assigning values for the ROS_HOSTNAME environment variable
+    os.environ["ROS_HOSTNAME"] = f"{local_ip}"
+
+    rospy.logdebug(f"Changed ROS_MASTER_URI to: {remote_ip}:{remote_ros_port}")
+
+    return True
+
+
 def change_gazebo_master(gazebo_port: str) -> bool:
     """
     Function to set the current Gazebo Master Environment Variable.
