@@ -21,9 +21,10 @@ It has the following functions,
     16. load_urdf: Load a URDF into the parameter server or a string containing the processed URDF data
     17. is_roscore_running: Check if a roscore is currently running
     18. change_ros_master: Set the current ROS Master Environment Variable.
-    19. change_gazebo_master: Set the current Gazebo Master Environment Variable
-    20. init_robot_state_publisher: Initialize the robot state publisher.
-    21. remove_all_from_rosmaster_list: Remove all ports from the Multiros rosmaster port list.
+    19. change_ros_master_multi_device: Set the current ROS Master Environment Variable for multi-device
+    20. change_gazebo_master: Set the current Gazebo Master Environment Variable
+    21. init_robot_state_publisher: Initialize the robot state publisher.
+    22. remove_all_from_rosmaster_list: Remove all ports from the Multiros rosmaster port list.
 
 """
 import rosparam
