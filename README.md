@@ -105,7 +105,7 @@ To get started with MultiROS, follow these steps:
 1. Clone the repository:
     ```shell
     cd ~/catkin_ws/src
-    git clone https://github.com/ncbdrck/multiros.git
+    git clone -b gymnasium https://github.com/ncbdrck/multiros.git
     ```
 
 2. MultiROS relies on several Python packages. You can install them by running the following command:
@@ -133,14 +133,16 @@ The installation instructions for the examples are provided in the respective re
 
 ## License
 
-MultiROS is released under the [MIT License](https://opensource.org/licenses/MIT). Please see the LICENSE file for more details.
+MultiROS is released under the [MIT Licence](https://opensource.org/licenses/MIT). Please see the LICENCE file for more details.
 
 ## Acknowledgements
 
 We would like to thank the following projects and communities for their valuable contributions, as well as the authors of relevant libraries and tools used in MultiROS.
 - [ROS (Robot Operating System)](https://www.ros.org/)
 - [Gazebo](https://gazebosim.org/)
-- [Openai Gym](https://github.com/openai/gym/)
+- [Gymnasium](https://github.com/Farama-Foundation/Gymnasium)
+- [Gymnasium-Robotics](https://github.com/Farama-Foundation/Gymnasium-Robotics)
+- [OpenAI Gym](https://gym.openai.com/)
 - [openai_ros](http://wiki.ros.org/openai_ros)
 - [frobs_rl](https://frobs-rl.readthedocs.io/en/latest/)
 - [gym-gazebo](https://github.com/erlerobot/gym-gazebo/)
