@@ -1,19 +1,19 @@
 #!/bin/python3
 
-import gym
+import gymnasium as gym
 from multiprocessing import Process, Pipe
 
 """
     This is the main class for the Multiros package.
     
     Usage:
-        from multiros.core import multiros_gym as gym
+        from multiros.core import MultirosGym as gym
         env = gym.make("env_name", args)
         env.reset()
 """
 
 
-class multiros_gym:
+class MultirosGym:
     def __init__(self, env_name, *args, **kwargs):
         # Create a pipe for communication between the main process and the worker process
         self.parent_conn, self.child_conn = Pipe()
@@ -37,7 +37,7 @@ class multiros_gym:
                 conn.send(env.step(data))
 
             elif cmd == 'reset':
-                conn.send(env.reset())
+                conn.send(env.reset(*data))
 
             elif cmd == 'close':
                 env.close()
@@ -48,7 +48,7 @@ class multiros_gym:
                 try:
                     attr = getattr(env, data)
 
-                    # If the attribute is callable (i.e., a method),
+                    # If the attribute is callable (i.e. a method),
                     # send a special string 'callable' to the main process
                     if callable(attr):
                         conn.send('callable')
@@ -86,9 +86,9 @@ class multiros_gym:
         # Receive and return the result of taking a step in the environment
         return self.parent_conn.recv()
 
-    def reset(self):
+    def reset(self,  *args, **kwargs):
         # Send a 'reset' command to the worker process
-        self.parent_conn.send(('reset', None))
+        self.parent_conn.send(('reset', (args, kwargs)))
         # Receive and return the initial observation of the environment after resetting it
         return self.parent_conn.recv()
 
