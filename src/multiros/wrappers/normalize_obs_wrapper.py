@@ -1,7 +1,9 @@
-import gym
+import gymnasium as gym
 import numpy as np
 
 import rospy
+
+
 class NormalizeObservationWrapper(gym.ObservationWrapper):
     """
     A wrapper for normalizing the observation space of an environment.
@@ -25,15 +27,17 @@ class NormalizeObservationWrapper(gym.ObservationWrapper):
 
         self.normalize_goal_spaces = normalize_goal_spaces
 
-        # check if it is gym.Env based
+        # check if it is gymnasium.Env based
         if isinstance(env.observation_space, gym.spaces.Box):
-            self.observation_space = gym.spaces.Box(low=-1.0, high=1.0, shape=env.observation_space.shape, dtype=np.float32)
+            self.observation_space = gym.spaces.Box(low=-1.0, high=1.0, shape=env.observation_space.shape,
+                                                    dtype=np.float32)
             self.normalize_observation = self._normalize_box_observation
 
-        # check if it is gym.GoalEnv based
+        # check if it is gymnasium_robotics.GoalEnv based
         elif isinstance(env.observation_space, gym.spaces.Dict):
             self.observation_space = gym.spaces.Dict({
-                'observation': gym.spaces.Box(low=-1.0, high=1.0, shape=env.observation_space['observation'].shape, dtype=np.float32),
+                'observation': gym.spaces.Box(low=-1.0, high=1.0, shape=env.observation_space['observation'].shape,
+                                              dtype=np.float32),
                 'achieved_goal': env.observation_space['achieved_goal'],
                 'desired_goal': env.observation_space['desired_goal']
             })
@@ -46,10 +50,6 @@ class NormalizeObservationWrapper(gym.ObservationWrapper):
         if isinstance(self.env.observation_space, gym.spaces.Box):
             low = self.env.observation_space.low
             high = self.env.observation_space.high
-
-            # ---- debug
-            # rospy.logwarn(f"observations low:{low}")
-            # rospy.logwarn(f"observations high:{high}")
 
         elif isinstance(self.env.observation_space, gym.spaces.Dict):
             low = self.env.observation_space['observation'].low
@@ -98,21 +98,6 @@ class NormalizeObservationWrapper(gym.ObservationWrapper):
         return observation
 
     def observation(self, observation):
-
-        # --------for debug
-        # if isinstance(self.env.observation_space, gym.spaces.Box):
-        #     low = self.env.observation_space.low
-        #     high = self.env.observation_space.high
-        # elif isinstance(self.env.observation_space, gym.spaces.Dict):
-        #     low = self.env.observation_space['observation'].low
-        #     high = self.env.observation_space['observation'].high
-        # else:
-        #     raise ValueError(f"Unsupported observation space: {type(self.env.observation_space)}")
-        #
-        # if np.any(observation < low) or np.any(observation > high):
-        #     rospy.logwarn(f"Observation out of bounds: {observation}")
-        # rospy.logwarn(f"observations before norm:{observation}")
-        # rospy.logwarn(f"observations after norm:{self.normalize_observation(observation)}")
 
         # Normalize the observation using the appropriate method
         return self.normalize_observation(observation)

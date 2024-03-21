@@ -1,5 +1,5 @@
 import numpy as np
-import gym
+import gymnasium as gym
 
 import rospy
 
@@ -8,7 +8,8 @@ class NormalizeActionWrapper(gym.Wrapper):
     """
     A wrapper for normalizing the action space of an environment.
 
-    This wrapper normalizes the actions to be between -1.0 and 1.0. It can be used with environments whose action space is of type Box.
+    This wrapper normalizes the actions to be between -1.0 and 1.0.
+    It can be used with environments whose action space is of type Box.
 
     Args:
         env (gym.Env): The environment to wrap.

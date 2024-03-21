@@ -1,4 +1,6 @@
-import gym
+from typing import Any
+
+import gymnasium as gym
 
 
 class TimeLimitWrapper(gym.Wrapper):
@@ -40,18 +42,20 @@ class TimeLimitWrapper(gym.Wrapper):
         Returns:
             observation (Any): The observation representing the current state of the environment.
             reward (float): The reward for taking the given action.
-            done (bool): Whether the episode has ended.
+            terminated (bool): Whether the agent reaches the terminal state.
+            truncated (bool): Whether the episode is truncated due to various reasons.
             info (dict): Additional information about the environment.
         """
         # Take a step in the underlying environment
-        observation, reward, done, info = self.env.step(action)
+        observation, reward, terminated, truncated, info = self.env.step(action)
 
         # Increment the step counter
         self.counter += 1
 
-        # If the maximum number of steps has been reached, overwrite done to True
+        # If the maximum number of steps has been reached, overwrite terminated and truncated
         if self.counter >= self.max_steps:
-            done = True
+            terminated = False  # The episode is not ending due to a natural terminal state
+            truncated = True  # The episode is ending due to an external condition (time limit)
             info['time_limit_reached'] = True
 
             # This is to log the success rate in stable_baselines3
@@ -59,11 +63,11 @@ class TimeLimitWrapper(gym.Wrapper):
 
             # Take the termination action
             if len(self.termination_action) > 0:
-                _, _, _, _ = self.env.step(self.termination_action)
+                _, _, _, _, _ = self.env.step(self.termination_action)
 
-        return observation, reward, done, info
+        return observation, reward, terminated, truncated, info
 
-    def reset(self):
+    def reset(self, seed: int | None = None, options: dict[str, Any] | None = None):
         """
         Reset the environment.
 
@@ -74,4 +78,4 @@ class TimeLimitWrapper(gym.Wrapper):
         self.counter = 0
 
         # Reset the underlying environment
-        return self.env.reset()
+        return self.env.reset(seed=seed, options=options)
