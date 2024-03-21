@@ -133,7 +133,7 @@ The installation instructions for the examples are provided in the respective re
 
 ## License
 
-MultiROS is released under the [MIT Licence](https://opensource.org/licenses/MIT). Please see the LICENCE file for more details.
+MultiROS is released under the [MIT License](https://opensource.org/licenses/MIT). Please see the LICENSE file for more details.
 
 ## Acknowledgements
 
