@@ -6,7 +6,7 @@ It has the following functions,
   01. get_gazebo_physics_properties: Get the current physics properties of Gazebo.
   02. set_gazebo_physics_properties: Set the physics properties of Gazebo.
   03. get_gazebo_max_update_rate: Get the current maximum update rate for Gazebo.
-  04. set_gazebo_max_update_rate: Set the maximum update rate for Gazebo in real-time factor.
+  04. set_gazebo_max_update_rate: Set the maximum update rate for Gazebo in a real-time factor.
   05. get_gazebo_time_step: Get the current time step for Gazebo.
   06. set_gazebo_time_step: Set the time step for Gazebo.
   07. get_gazebo_gravity: Get the current gravity vector for Gazebo.

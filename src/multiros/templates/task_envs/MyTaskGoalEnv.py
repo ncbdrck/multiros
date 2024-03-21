@@ -2,8 +2,9 @@
 
 import rospy
 import numpy as np
-from gym import spaces
-from gym.envs.registration import register
+from gymnasium import spaces
+from gymnasium.envs.registration import register
+from typing import Any
 
 # Custom robot env
 from multiros.templates.robot_envs import MyRobotGoalEnv
@@ -16,7 +17,7 @@ from multiros.utils import gazebo_core
 from multiros.utils import ros_common
 # from multiros.utils import ros_controllers
 
-# Register your environment using the OpenAI register method to utilize gym.make("MyTaskGoalEnv-v0").
+# Register your environment using the gymnasium register method to utilize gym.make("MyTaskGoalEnv-v0").
 register(
     id='MyTaskGoalEnv-v0',
     entry_point='multiros.templates.task_envs.MyTaskGoalEnv:MyTaskGoalEnv',
@@ -172,14 +173,16 @@ class MyTaskGoalEnv(MyRobotGoalEnv.MyRobotGoalEnv):
     # -------------------------------------------------------
     #   Methods for interacting with the environment
 
-    def _set_init_params(self):
+    def _set_init_params(self, options: dict[str, Any] | None = None):
         """
         Set initial parameters for the environment.
 
-        This method should be implemented here to set any initial parameters or state variables for the
+        This method should be implemented by subclasses to set any initial parameters or state variables for the
         environment. This could include resetting joint positions, resetting sensor readings, or any other initial
         setup that needs to be performed at the start of each episode.
 
+        Args:
+            options (dict): Additional options for setting the initial parameters. Comes from the env.reset() method.
         """
         raise NotImplementedError()
 
@@ -245,16 +248,41 @@ class MyTaskGoalEnv(MyRobotGoalEnv.MyRobotGoalEnv):
 
         raise NotImplementedError()
 
-    def _is_done(self):
+    def compute_terminated(self, achieved_goal, desired_goal, info):
         """
-        Function to check if the episode is done.
+        Function to check if the episode is terminated due to reaching a terminal state.
 
-        This method should be implemented here to return a boolean value indicating whether the episode has
+        This method should be implemented by subclasses to return a boolean value indicating whether the episode has
         ended (e.g., because a goal has been reached or a failure condition has been triggered).
-        
+
+        Args:
+            achieved_goal (Any): The achieved goal representing the current state of the environment.
+            desired_goal (Any): The desired goal representing the target state of the environment.
+            info (dict): Additional information for computing the termination condition.
+
         Returns:
             A boolean value indicating whether the episode has ended
             (e.g., because a goal has been reached or a failure condition has been triggered)
+        """
+        raise NotImplementedError()
+
+    def compute_truncated(self, achieved_goal, desired_goal, info):
+        """
+        Function to check if the episode is truncated due non-terminal reasons.
+
+        This method should be implemented by subclasses to return a boolean value indicating whether the episode has
+        been truncated due to reasons other than reaching a terminal state.
+        Truncated states are those that are out of the scope of the Markov Decision Process (MDP).
+        This could include truncation due to reaching a maximum number of steps, or any other non-terminal condition
+        that causes the episode to end early.
+
+        Args:
+            achieved_goal (Any): The achieved goal representing the current state of the environment.
+            desired_goal (Any): The desired goal representing the target state of the environment.
+            info (dict): Additional information for computing the truncation condition.
+
+        Returns:
+            A boolean value indicating whether the episode has been truncated.
         """
         raise NotImplementedError()
 

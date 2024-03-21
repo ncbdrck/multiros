@@ -1,7 +1,8 @@
 #!/bin/python3
+from typing import Any
 
-from gym import spaces
-from gym.envs.registration import register
+from gymnasium import spaces
+from gymnasium.envs.registration import register
 
 from multiros.envs import GazeboBaseEnv
 
@@ -50,7 +51,7 @@ class MyRobotEnv(GazeboBaseEnv.GazeboBaseEnv):
             /joint_states : JointState received for the joints of the robot
 
         Actuators Topic List:
-            MoveIt! : MoveIt! action server is used to send the joint positions to the robot.
+            MoveIt!: MoveIt action server is used to send the joint positions to the robot.
         """
         rospy.loginfo("Start Init Custom Robot Env")
 
@@ -307,7 +308,7 @@ class MyRobotEnv(GazeboBaseEnv.GazeboBaseEnv):
         """
         raise NotImplementedError()
 
-    def _get_reward(self):
+    def _get_reward(self, info: dict[str, Any] | None = None):
         """
         Function to get a reward from the environment.
 
@@ -315,30 +316,57 @@ class MyRobotEnv(GazeboBaseEnv.GazeboBaseEnv):
         is doing in the current episode. The reward could be based on the distance to a goal, the amount of time taken
         to reach a goal, or any other metric that can be used to measure how well the agent is doing.
 
+        Args:
+            info (dict): Additional information for computing the reward.
+
         Returns:
             A scalar reward value representing how well the agent is doing in the current episode.
         """
         raise NotImplementedError()
 
-    def _is_done(self):
+    def _compute_terminated(self, info: dict[str, Any] | None = None):
         """
-        Function to check if the episode is done.
+        Function to check if the episode is terminated due to reaching a terminal state.
 
         This method should be implemented by subclasses to return a boolean value indicating whether the episode has
         ended (e.g., because a goal has been reached or a failure condition has been triggered).
-        
+
+        Args:
+            info (dict): Additional information for computing the termination condition.
+
         Returns:
             A boolean value indicating whether the episode has ended
             (e.g., because a goal has been reached or a failure condition has been triggered)
         """
         raise NotImplementedError()
 
-    def _set_init_params(self):
+    def _compute_truncated(self, info: dict[str, Any] | None = None):
+        """
+        Function to check if the episode is truncated due non-terminal reasons.
+
+        This method should be implemented by subclasses to return a boolean value indicating whether the episode has
+        been truncated due to reasons other than reaching a terminal state.
+        Truncated states are those that are out of the scope of the Markov Decision Process (MDP).
+        This could include truncation due to reaching a maximum number of steps, or any other non-terminal condition
+        that causes the episode to end early.
+
+        Args:
+            info (dict): Additional information for computing the truncation condition.
+
+        Returns:
+            A boolean value indicating whether the episode has been truncated.
+        """
+        raise NotImplementedError()
+
+    def _set_init_params(self, options: dict[str, Any] | None = None):
         """
         Set initial parameters for the environment.
 
         This method should be implemented by subclasses to set any initial parameters or state variables for the
         environment. This could include resetting joint positions, resetting sensor readings, or any other initial
         setup that needs to be performed at the start of each episode.
+
+        Args:
+            options (dict): Additional options for setting the initial parameters. Comes from the env.reset() method.
         """
         raise NotImplementedError()
