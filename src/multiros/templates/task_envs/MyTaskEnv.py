@@ -162,7 +162,7 @@ class MyTaskEnv(MyRobotEnv.MyRobotEnv):
         """
         Set initial parameters for the environment.
 
-        This method should be implemented by subclasses to set any initial parameters or state variables for the
+        This method should be implemented here to set any initial parameters or state variables for the
         environment. This could include resetting joint positions, resetting sensor readings, or any other initial
         setup that needs to be performed at the start of each episode.
 
@@ -201,7 +201,7 @@ class MyTaskEnv(MyRobotEnv.MyRobotEnv):
         """
         Function to get a reward from the environment.
 
-        This method should be implemented by subclasses to return a scalar reward value representing how well the agent
+        This method should be implemented here to return a scalar reward value representing how well the agent
         is doing in the current episode. The reward could be based on the distance to a goal, the amount of time taken
         to reach a goal, or any other metric that can be used to measure how well the agent is doing.
 
@@ -217,7 +217,7 @@ class MyTaskEnv(MyRobotEnv.MyRobotEnv):
         """
         Function to check if the episode is terminated due to reaching a terminal state.
 
-        This method should be implemented by subclasses to return a boolean value indicating whether the episode has
+        This method should be implemented here to return a boolean value indicating whether the episode has
         ended (e.g., because a goal has been reached or a failure condition has been triggered).
 
         Args:
@@ -233,7 +233,7 @@ class MyTaskEnv(MyRobotEnv.MyRobotEnv):
         """
         Function to check if the episode is truncated due non-terminal reasons.
 
-        This method should be implemented by subclasses to return a boolean value indicating whether the episode has
+        This method should be implemented here to return a boolean value indicating whether the episode has
         been truncated due to reasons other than reaching a terminal state.
         Truncated states are those that are out of the scope of the Markov Decision Process (MDP).
         This could include truncation due to reaching a maximum number of steps, or any other non-terminal condition
