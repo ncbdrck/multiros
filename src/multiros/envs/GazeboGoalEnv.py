@@ -1,21 +1,18 @@
 #!/bin/python3
 
 import rospy
-import gym
-from gym.utils import seeding
+import gymnasium_robotics
 from multiros.utils import gazebo_core
 from multiros.utils import gazebo_models
 from multiros.utils import gazebo_physics
 from multiros.utils import ros_common
 from multiros.utils import ros_controllers
-from typing import List
+from typing import List, Any
 
 
-class GazeboGoalEnv(gym.GoalEnv):
+class GazeboGoalEnv(gymnasium_robotics.GoalEnv):
     """
-    A custom OpenAI Gym environment for reinforcement learning using ROS and Gazebo.
-
-    More suited for Goal Envs
+    A custom gymnasium robotics goal-conditioned environment for reinforcement learning using ROS and Gazebo.
     """
 
     def __init__(self, spawn_robot: bool = False, urdf_pkg_name: str = None, urdf_file_name: str = None,
@@ -93,7 +90,7 @@ class GazeboGoalEnv(gym.GoalEnv):
         self.ros_port = ros_port
         self.gazebo_port = gazebo_port
         self.gazebo_pid = gazebo_pid
-        self.random_seed = seed
+        self.user_seed = seed
         self.unpause_pause_physics = unpause_pause_physics
         self.action_cycle_time = action_cycle_time
 
@@ -102,7 +99,8 @@ class GazeboGoalEnv(gym.GoalEnv):
         self.achieved_goal = None
         self.desired_goal = None
         self.reward = 0.0
-        self.done = None
+        self.terminated = None
+        self.truncated = None
 
         # --------- Change the ros/gazebo master
         # defined in Task Env
@@ -113,7 +111,7 @@ class GazeboGoalEnv(gym.GoalEnv):
         Function to initialise the environment.
         """
 
-        # Init gym.Env
+        # Init gymnasium_robotics.GoalEnv
         super().__init__()
 
         self.namespace = namespace
@@ -125,15 +123,6 @@ class GazeboGoalEnv(gym.GoalEnv):
         self.kill_rosmaster = kill_rosmaster
         self.kill_gazebo = kill_gazebo
         self.clean_logs = clean_logs
-
-        # --------- Seed the random number generator
-        self.np_random = None
-
-        # defined in Task Env
-        if self.random_seed is not None:
-            self.seed(self.random_seed)
-        else:
-            self.seed()
 
         """
         Set gazebo physics parameters to change the speed of the simulation
@@ -174,19 +163,6 @@ class GazeboGoalEnv(gym.GoalEnv):
 
         rospy.loginfo(self.CYAN + "End init GazeboGoalEnv" + self.ENDC)
 
-    def seed(self, seed: int = None):
-        """
-        Seed the random number generator for the environment.
-
-        Args:
-            seed (int): The seed for the random number generator.
-
-        Returns:
-            seeds (List[int]): The list of seeds used by the random number generator.
-        """
-        self.np_random, seed = seeding.np_random(seed)
-        return [seed]
-
     def step(self, action):
         """
         Take a step in the environment.
@@ -197,7 +173,9 @@ class GazeboGoalEnv(gym.GoalEnv):
         Returns:
             observation (dict): A dictionary containing the observation, achieved goal, and desired goal.
             reward (float): The reward for taking the given action.
-            done (bool): Whether the episode has ended.
+            terminated (bool): Whether the agent reaches the terminal state.
+            truncated (bool): Whether the episode is truncated due to various reasons.
+            (e.g. reaching the maximum number of steps, or end before the terminal state)
             info (dict): Additional information about the environment.
         """
 
@@ -228,26 +206,41 @@ class GazeboGoalEnv(gym.GoalEnv):
         if self.action_cycle_time > 0.0:
             rospy.sleep(self.action_cycle_time)
 
-        # Get the observation, reward, and done flag
+        # Get the observation, reward and terminated, truncated flags
         self.info = {}
         self.observation = self._get_observation()
         self.achieved_goal = self._get_achieved_goal()
         self.desired_goal = self._get_desired_goal()
         self.reward = self.compute_reward(self.achieved_goal, self.desired_goal, self.info)
-        self.done = self._is_done()
+        self.terminated = self.compute_terminated(self.achieved_goal, self.desired_goal, self.info)
+        self.truncated = self.compute_truncated(self.achieved_goal, self.desired_goal, self.info)
 
         # rospy.loginfo(self.MAGENTA + "*************** End Step Env" + self.ENDC)
 
         return {'observation': self.observation, 'achieved_goal': self.achieved_goal,
-                'desired_goal': self.desired_goal}, self.reward, self.done, self.info
+                'desired_goal': self.desired_goal}, self.reward, self.terminated, self.truncated, self.info
 
-    def reset(self):
+    def reset(self, seed: int | None = None, options: dict[str, Any] | None = None):
         """
         Reset the environment.
 
+        Args:
+            seed (int): The seed for the random number generator.
+            options (dict): Additional options for resetting the environment.
+
         Returns:
             observation (dict): A dictionary containing the initial observation, achieved goal, and desired goal.
+            info (dict): Additional information about the environment. Similar to the info returned by step().
         """
+
+        # set the seed (standard way to set the seed in gymnasium)
+        if self.user_seed is not None:
+            super().reset(seed=self.user_seed)
+        else:
+            super().reset(seed=seed)
+
+        # reinitialize the info dictionary
+        self.info = {}
 
         # ----- Change the ros/gazebo master
         if self.ros_port is not None:
@@ -256,15 +249,16 @@ class GazeboGoalEnv(gym.GoalEnv):
         # ----- Reset the env
         rospy.loginfo(self.MAGENTA + "*************** Start Reset Env" + self.ENDC)
 
-        # Reset Gazebo and get the initial observation
-        self._reset_gazebo()
+        # Reset the Gazebo and get the initial observation
+        self._reset_gazebo(options=options)
         self.observation = self._get_observation()
         self.achieved_goal = self._get_achieved_goal()
         self.desired_goal = self._get_desired_goal()
 
         rospy.loginfo(self.MAGENTA + "*************** End Reset Env" + self.ENDC)
 
-        return {'observation': self.observation, 'achieved_goal': self.achieved_goal, 'desired_goal': self.desired_goal}
+        return {'observation': self.observation, 'achieved_goal': self.achieved_goal,
+                'desired_goal': self.desired_goal}, self.info
 
     def close(self):
         """
@@ -324,12 +318,17 @@ class GazeboGoalEnv(gym.GoalEnv):
         """
         raise NotImplementedError()
 
-    def _is_done(self):
+    def compute_terminated(self, achieved_goal, desired_goal, info):
         """
-        Function to check if the episode is done.
+        Function to check if the episode is terminated due to reaching a terminal state.
 
         This method should be implemented by subclasses to return a boolean value indicating whether the episode has
         ended (e.g., because a goal has been reached or a failure condition has been triggered).
+
+        Args:
+            achieved_goal (Any): The achieved goal representing the current state of the environment.
+            desired_goal (Any): The desired goal representing the target state of the environment.
+            info (dict): Additional information for computing the termination condition.
 
         Returns:
             A boolean value indicating whether the episode has ended
@@ -337,13 +336,36 @@ class GazeboGoalEnv(gym.GoalEnv):
         """
         raise NotImplementedError()
 
-    def _set_init_params(self):
+    def compute_truncated(self, achieved_goal, desired_goal, info):
+        """
+        Function to check if the episode is truncated due non-terminal reasons.
+
+        This method should be implemented by subclasses to return a boolean value indicating whether the episode has
+        been truncated due to reasons other than reaching a terminal state.
+        Truncated states are those that are out of the scope of the Markov Decision Process (MDP).
+        This could include truncation due to reaching a maximum number of steps, or any other non-terminal condition
+        that causes the episode to end early.
+
+        Args:
+            achieved_goal (Any): The achieved goal representing the current state of the environment.
+            desired_goal (Any): The desired goal representing the target state of the environment.
+            info (dict): Additional information for computing the truncation condition.
+
+        Returns:
+            A boolean value indicating whether the episode has been truncated.
+        """
+        raise NotImplementedError()
+
+    def _set_init_params(self, options: dict[str, Any] | None = None):
         """
         Set initial parameters for the environment.
 
         This method should be implemented by subclasses to set any initial parameters or state variables for the
         environment. This could include resetting joint positions, resetting sensor readings, or any other initial
         setup that needs to be performed at the start of each episode.
+
+        Args:
+            options (dict): Additional options for setting the initial parameters.
         """
         raise NotImplementedError()
 
@@ -376,7 +398,7 @@ class GazeboGoalEnv(gym.GoalEnv):
         Args:
             achieved_goal (Any): The achieved goal representing the current state of the environment.
             desired_goal (Any): The desired goal representing the target state of the environment.
-            info (dict): Additional information about the environment.
+            info (dict): Additional information for computing the reward.
 
         Returns:
             reward (float): The reward for achieving the given goal.
@@ -397,19 +419,21 @@ class GazeboGoalEnv(gym.GoalEnv):
     # ------------------------------------------
     #   Custom methods for the GazeboGoalEnv
 
-    def _reset_gazebo(self):
+    def _reset_gazebo(self, options: dict[str, Any] | None = None):
         """
         Helper function to reset the Gazebo simulation and the controllers.
 
         if self.reset_mode is
-            "world": Reset Gazebo world (Does not reset time) - default
+            "world": Reset a Gazebo world (Does not reset time) - default
             "simulation": Reset gazebo simulation (Resets time)
+
+        Args:
+            options (dict): Additional options for resetting the environment.
         """
 
         # Pause Gazebo and reset it
         if self.unpause_pause_physics:
             gazebo_core.pause_gazebo()
-
         gazebo_core.reset_gazebo(reset_type=self.reset_mode)
 
         # Reset the controllers
@@ -425,9 +449,11 @@ class GazeboGoalEnv(gym.GoalEnv):
         # Unpause Gazebo and check the connection status
         if self.unpause_pause_physics:
             gazebo_core.unpause_gazebo()
-
         self._check_connection_and_readiness()
-        self._set_init_params()
 
+        # set initial parameters for the environment
+        self._set_init_params(options=options)
+
+        # pause Gazebo
         if self.unpause_pause_physics:
             gazebo_core.pause_gazebo()
