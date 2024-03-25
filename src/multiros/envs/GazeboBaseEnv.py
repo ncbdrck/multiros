@@ -7,7 +7,7 @@ from multiros.utils import gazebo_models
 from multiros.utils import gazebo_physics
 from multiros.utils import ros_common
 from multiros.utils import ros_controllers
-from typing import Optional, List, Any
+from typing import Optional, List, Any, Dict
 
 
 class GazeboBaseEnv(gym.Env):
@@ -215,7 +215,8 @@ class GazeboBaseEnv(gym.Env):
 
         return self.observation, self.reward, self.terminated, self.truncated, self.info
 
-    def reset(self, seed: int | None = None, options: dict[str, Any] | None = None):
+    def reset(self, seed: Optional[int] = None, options: Optional[Dict[str, Any]] = None):
+
         """
         Reset the environment.
 
@@ -310,7 +311,7 @@ class GazeboBaseEnv(gym.Env):
         """
         raise NotImplementedError()
 
-    def _get_reward(self, info: dict[str, Any] | None = None):
+    def _get_reward(self, info: Optional[Dict[str, Any]] = None):
         """
         Function to get a reward from the environment.
 
@@ -326,7 +327,7 @@ class GazeboBaseEnv(gym.Env):
         """
         raise NotImplementedError()
 
-    def _compute_terminated(self, info: dict[str, Any] | None = None):
+    def _compute_terminated(self, info: Optional[Dict[str, Any]] = None):
         """
         Function to check if the episode is terminated due to reaching a terminal state.
 
@@ -342,7 +343,7 @@ class GazeboBaseEnv(gym.Env):
         """
         raise NotImplementedError()
 
-    def _compute_truncated(self, info: dict[str, Any] | None = None):
+    def _compute_truncated(self, info: Optional[Dict[str, Any]] = None):
         """
         Function to check if the episode is truncated due non-terminal reasons.
 
@@ -360,7 +361,7 @@ class GazeboBaseEnv(gym.Env):
         """
         raise NotImplementedError()
 
-    def _set_init_params(self, options: dict[str, Any] | None = None):
+    def _set_init_params(self, options: Optional[Dict[str, Any]] = None):
         """
         Set initial parameters for the environment.
 
@@ -386,7 +387,7 @@ class GazeboBaseEnv(gym.Env):
     # ------------------------------------------
     #   Custom methods for the GazeboBaseEnv
 
-    def _reset_gazebo(self, options: dict[str, Any] | None = None):
+    def _reset_gazebo(self, options: Optional[Dict[str, Any]] = None):
         """
         Helper function to reset the Gazebo simulation and the controllers.
 

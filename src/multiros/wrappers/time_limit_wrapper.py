@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, Optional, Dict
 
 import gymnasium as gym
 
@@ -67,7 +67,7 @@ class TimeLimitWrapper(gym.Wrapper):
 
         return observation, reward, terminated, truncated, info
 
-    def reset(self, seed: int | None = None, options: dict[str, Any] | None = None):
+    def reset(self, seed: Optional[int] = None, options: Optional[Dict[str, Any]] = None):
         """
         Reset the environment.
 
