@@ -75,7 +75,7 @@ MultiROS also requires the following additional packages:
     ```shell
     # download the package - modified version of the original package to support ROS Noetic
     cd ~/catkin_ws/src
-    git clone https://github.com/ncbdrck/hrl-kdl.git
+    git clone -b openai_gym https://github.com/ncbdrck/hrl-kdl.git
   
     # install the pykd_utils
     cd ~/catkin_ws/src/hrl-kdl/pykdl_utils
