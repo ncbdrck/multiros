@@ -53,6 +53,10 @@ MultiROS also requires the following additional packages:
     ```shell
     sudo apt install xterm
     ```
+- [PyKDL](https://github.com/orocos/orocos_kinematics_dynamics) for Kinematics:
+    ```shell
+  sudo apt install python3-pykdl
+    ```
 - [MoveIt](https://moveit.ros.org/) for motion planning:
     ```shell
     sudo apt install ros-noetic-moveit
