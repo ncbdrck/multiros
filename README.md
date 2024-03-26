@@ -75,7 +75,7 @@ MultiROS also requires the following additional packages:
     ```shell
     # download the package - modified version of the original package to support ROS Noetic
     cd ~/catkin_ws/src
-    git clone -b openai_gym https://github.com/ncbdrck/hrl-kdl.git
+    git clone https://github.com/ncbdrck/hrl-kdl.git
   
     # install the pykd_utils
     cd ~/catkin_ws/src/hrl-kdl/pykdl_utils
@@ -109,7 +109,7 @@ To get started with MultiROS, follow these steps:
 1. Clone the repository:
     ```shell
     cd ~/catkin_ws/src
-    git clone https://github.com/ncbdrck/multiros.git
+    git clone -b openai_gym https://github.com/ncbdrck/multiros.git
     ```
 
 2. MultiROS relies on several Python packages. You can install them by running the following command:
