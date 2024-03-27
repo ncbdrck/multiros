@@ -190,7 +190,7 @@ def spawn_sdf_model_gazebo(model_path: str = None, pkg_name: str = None, file_na
                            namespace: str = "/", reference_frame: str = "world",
                            pos_x: float = 0.0, pos_y: float = 0.0, pos_z: float = 0.0,
                            ori_x: float = 0.0, ori_y: float = 0.0, ori_z: float = 0.0, ori_w: float = 1.0,
-                           ros_port=None, gazebo_port=None, max_tries: int = 5) -> bool:
+                           ros_port=None, gazebo_port=None, max_tries: int = 5, pause_unpause=True) -> bool:
     """
     Function to spawn an SDF model in Gazebo. This function make sure that model was spawned.
 
@@ -212,6 +212,7 @@ def spawn_sdf_model_gazebo(model_path: str = None, pkg_name: str = None, file_na
         ros_port (str): The ROS_MASTER_URI port (optional). Defaults to None.
         gazebo_port (str): The GAZEBO_MASTER_URI port (optional). Defaults to None.
         max_tries (int): The maximum number of times to attempt to spawn the model. Defaults to 5.
+        pause_unpause (bool): Whether to pause and unpause Gazebo before and after spawning the model. Defaults to True.
 
     Returns:
         bool: True if all operations were successful, False otherwise.
@@ -231,7 +232,8 @@ def spawn_sdf_model_gazebo(model_path: str = None, pkg_name: str = None, file_na
                               pos_x=pos_x, pos_y=pos_y, pos_z=pos_z, ori_x=ori_x, ori_y=ori_y, ori_z=ori_z, ori_w=ori_w)
 
         # we need to unpause before ropy.sleep
-        gazebo_core.unpause_gazebo()
+        if pause_unpause:
+            gazebo_core.unpause_gazebo()
         rospy.sleep(5)  # wait for 5 seconds
 
         _, _, model_names = gazebo_get_world_properties()  # get the names of all the models in the world
@@ -247,7 +249,8 @@ def spawn_sdf_model_gazebo(model_path: str = None, pkg_name: str = None, file_na
             max_tries -= 1
 
     # let's pause the gazebo after the loop
-    gazebo_core.pause_gazebo()
+    if pause_unpause:
+        gazebo_core.pause_gazebo()
 
     return spawn_done
 
@@ -427,7 +430,8 @@ def gazebo_delete_model(model_name: str, ros_port=None, gazebo_port=None) -> Tup
     return result.success
 
 
-def remove_model_gazebo(model_name: str, max_tries: int = 5, ros_port=None, gazebo_port=None) -> bool:
+def remove_model_gazebo(model_name: str, max_tries: int = 5, ros_port=None, gazebo_port=None,
+                        pause_unpause=True) -> bool:
     """
     Function to make sure if a model is deleted from Gazebo.
 
@@ -436,6 +440,7 @@ def remove_model_gazebo(model_name: str, max_tries: int = 5, ros_port=None, gaze
         max_tries (int): The maximum number of times to attempt to delete the model. Defaults to 5.
         ros_port (str): The ROS_MASTER_URI port (optional). Defaults to None.
         gazebo_port (str): The GAZEBO_MASTER_URI port (optional). Defaults to None.
+        pause_unpause (bool): Whether to pause and unpause Gazebo before and after deleting the model. Defaults to True.
 
     Returns:
         bool: True if the operation was successful, False otherwise.
@@ -449,7 +454,8 @@ def remove_model_gazebo(model_name: str, max_tries: int = 5, ros_port=None, gaze
     # there is an issue of this becoming an infinite loop. So we use tries
     while not remove_done and max_tries != 0:
         # we need to unpause before rospy.sleep
-        gazebo_core.unpause_gazebo()
+        if pause_unpause:
+            gazebo_core.unpause_gazebo()
         rospy.sleep(5)  # wait for 5 seconds
 
         # check if the object already in the sim
@@ -466,7 +472,8 @@ def remove_model_gazebo(model_name: str, max_tries: int = 5, ros_port=None, gaze
         max_tries -= 1
 
     # let's pause the gazebo after the loop
-    gazebo_core.pause_gazebo()
+    if pause_unpause:
+        gazebo_core.pause_gazebo()
 
     return remove_done
 
