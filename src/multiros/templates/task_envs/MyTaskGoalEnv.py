@@ -4,7 +4,7 @@ import rospy
 import numpy as np
 from gymnasium import spaces
 from gymnasium.envs.registration import register
-from typing import Any
+from typing import List, Any, Dict, Optional
 
 # Custom robot env
 from multiros.templates.robot_envs import MyRobotGoalEnv
@@ -173,7 +173,7 @@ class MyTaskGoalEnv(MyRobotGoalEnv.MyRobotGoalEnv):
     # -------------------------------------------------------
     #   Methods for interacting with the environment
 
-    def _set_init_params(self, options: dict[str, Any] | None = None):
+    def _set_init_params(self, options: Optional[Dict[str, Any]] = None):
         """
         Set initial parameters for the environment.
 

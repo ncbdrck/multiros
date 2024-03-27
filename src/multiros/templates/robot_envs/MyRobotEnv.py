@@ -1,5 +1,5 @@
 #!/bin/python3
-from typing import Any
+from typing import Optional, List, Any, Dict
 
 from gymnasium import spaces
 from gymnasium.envs.registration import register
@@ -17,6 +17,7 @@ from multiros.utils.moveit_multiros import MoveitMultiros
 from multiros.utils import ros_common
 from multiros.utils import ros_controllers
 from multiros.utils import ros_markers
+from multiros.utils import ros_kinematics
 
 """
 Although it is best to register only the task environment, one can also register the robot environment. 
@@ -308,7 +309,7 @@ class MyRobotEnv(GazeboBaseEnv.GazeboBaseEnv):
         """
         raise NotImplementedError()
 
-    def _get_reward(self, info: dict[str, Any] | None = None):
+    def _get_reward(self, info: Optional[Dict[str, Any]] = None):
         """
         Function to get a reward from the environment.
 
@@ -324,7 +325,7 @@ class MyRobotEnv(GazeboBaseEnv.GazeboBaseEnv):
         """
         raise NotImplementedError()
 
-    def _compute_terminated(self, info: dict[str, Any] | None = None):
+    def _compute_terminated(self, info: Optional[Dict[str, Any]] = None):
         """
         Function to check if the episode is terminated due to reaching a terminal state.
 
@@ -340,7 +341,7 @@ class MyRobotEnv(GazeboBaseEnv.GazeboBaseEnv):
         """
         raise NotImplementedError()
 
-    def _compute_truncated(self, info: dict[str, Any] | None = None):
+    def _compute_truncated(self, info: Optional[Dict[str, Any]] = None):
         """
         Function to check if the episode is truncated due non-terminal reasons.
 
@@ -358,7 +359,7 @@ class MyRobotEnv(GazeboBaseEnv.GazeboBaseEnv):
         """
         raise NotImplementedError()
 
-    def _set_init_params(self, options: dict[str, Any] | None = None):
+    def _set_init_params(self, options: Optional[Dict[str, Any]] = None):
         """
         Set initial parameters for the environment.
 

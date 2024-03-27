@@ -1,6 +1,6 @@
 #!/bin/python3
 
-from typing import Any
+from typing import List, Any, Dict, Optional
 
 from gymnasium import spaces
 from gymnasium.envs.registration import register
@@ -366,7 +366,7 @@ class MyRobotGoalEnv(GazeboGoalEnv.GazeboGoalEnv):
         """
         raise NotImplementedError()
 
-    def _set_init_params(self, options: dict[str, Any] | None = None):
+    def _set_init_params(self, options: Optional[Dict[str, Any]] = None):
         """
         Set initial parameters for the environment.
 
