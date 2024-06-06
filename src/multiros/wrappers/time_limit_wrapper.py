@@ -1,81 +1,78 @@
-from typing import Any, Optional, Dict
-
+from copy import deepcopy
 import gymnasium as gym
+from typing import Optional, Union
 
+from gymnasium.envs.registration import EnvSpec
 
-class TimeLimitWrapper(gym.Wrapper):
-    """
-    A wrapper for limiting the number of steps per episode in an environment.
+class TimeLimitWrapper(gym.Wrapper, gym.utils.RecordConstructorArgs):
+    """This wrapper will issue a `truncated` signal if a maximum number of timesteps is exceeded.
 
-    This wrapper terminates an episode after a specified number of steps have been taken.
-
-    Args:
-        env (gym.Env): The environment to wrap.
-        max_steps (int): The maximum number of steps per episode.
-        termination_action (list): The action to take when the episode is terminated (Optional).
+    If a truncation is not defined inside the environment itself, this is the only place that the truncation signal is issued.
+    Critically, this is different from the `terminated` signal that originates from the underlying environment as part of the MDP.
     """
 
-    def __init__(self, env, max_steps=100, termination_action=None):
-        # init Wrapper
-        super().__init__(env)
-
-        # If no termination action is given, set it to an empty list
-        if termination_action is None:
-            termination_action = []
-
-        # Maximum steps for the env
-        self.max_steps = max_steps
-
-        # counter to track the current steps
-        self.counter = 0
-
-        # Termination action
-        self.termination_action = termination_action
-
-    def step(self, action):
-        """
-        Take a step in the environment.
+    def __init__(self, env: gym.Env, max_episode_steps: int):
+        """Initializes the :class:`TimeLimitWrapper` with an environment and the number of steps after which truncation will occur.
 
         Args:
-            action (np.ndarray): The action to take.
+            env: The environment to apply the wrapper
+            max_episode_steps: An optional max episode steps (if ``None``, ``env.spec.max_episode_steps`` is used)
+        """
+        gym.utils.RecordConstructorArgs.__init__(self, max_episode_steps=max_episode_steps)
+        gym.Wrapper.__init__(self, env)
+
+        self._max_episode_steps = max_episode_steps
+        self._elapsed_steps = 0
+
+    def step(self, action):
+        """Steps through the environment and if the number of steps elapsed exceeds ``max_episode_steps`` then truncate.
+
+        Args:
+            action: The environment step action
 
         Returns:
-            observation (Any): The observation representing the current state of the environment.
-            reward (float): The reward for taking the given action.
-            terminated (bool): Whether the agent reaches the terminal state.
-            truncated (bool): Whether the episode is truncated due to various reasons.
-            info (dict): Additional information about the environment.
+            The environment step ``(observation, reward, terminated, truncated, info)`` with `truncated=True`
+            if the number of steps elapsed >= max episode steps
         """
-        # Take a step in the underlying environment
         observation, reward, terminated, truncated, info = self.env.step(action)
+        self._elapsed_steps += 1
 
-        # Increment the step counter
-        self.counter += 1
-
-        # If the maximum number of steps has been reached, overwrite terminated and truncated
-        if self.counter >= self.max_steps:
-            terminated = False  # The episode is not ending due to a natural terminal state
-            truncated = True  # The episode is ending due to an external condition (time limit)
+        if self._elapsed_steps >= self._max_episode_steps:
+            truncated = True
             info['time_limit_reached'] = True
-
-            # This is to log the success rate in stable_baselines3
-            info['is_success'] = 0.0
-
-            # Take the termination action
-            if len(self.termination_action) > 0:
-                _, _, _, _, _ = self.env.step(self.termination_action)
+            if 'is_success' not in info:
+                info['is_success'] = 0.0
 
         return observation, reward, terminated, truncated, info
 
-    def reset(self, seed: Optional[int] = None, options: Optional[Dict[str, Any]] = None):
-        """
-        Reset the environment.
+    def reset(self, **kwargs):
+        """Resets the environment with :param:`**kwargs` and sets the number of steps elapsed to zero.
+
+        Args:
+            **kwargs: The kwargs to reset the environment with
 
         Returns:
-            observation (Any): The initial observation of the environment after resetting it.
+            The reset environment
         """
-        # Reset the step counter
-        self.counter = 0
+        self._elapsed_steps = 0
+        return self.env.reset(**kwargs)
 
-        # Reset the underlying environment
-        return self.env.reset(seed=seed, options=options)
+    @property
+    def spec(self) -> Optional[EnvSpec]:
+        """Modifies the environment spec to include the `max_episode_steps=self._max_episode_steps`."""
+        if self._cached_spec is not None:
+            return self._cached_spec
+
+        env_spec = self.env.spec
+        if env_spec is not None:
+            env_spec = deepcopy(env_spec)
+            env_spec.max_episode_steps = self._max_episode_steps
+
+        self._cached_spec = env_spec
+        return self._cached_spec
+
+# Usage of the public API to get max_episode_steps
+def get_env_params(env):
+    params = {}
+    params['max_timesteps'] = env.spec.max_episode_steps if env.spec else env._max_episode_steps
+    return params
