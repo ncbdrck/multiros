@@ -37,7 +37,8 @@ class MultirosGym:
                 conn.send(env.step(data))
 
             elif cmd == 'reset':
-                conn.send(env.reset(*data))
+                seed, options = data
+                conn.send(env.reset(seed=seed, options=options))
 
             elif cmd == 'close':
                 env.close()
@@ -86,9 +87,9 @@ class MultirosGym:
         # Receive and return the result of taking a step in the environment
         return self.parent_conn.recv()
 
-    def reset(self,  *args, **kwargs):
+    def reset(self, seed=None, options=None):
         # Send a 'reset' command to the worker process
-        self.parent_conn.send(('reset', (args, kwargs)))
+        self.parent_conn.send(('reset', (seed, options)))
         # Receive and return the initial observation of the environment after resetting it
         return self.parent_conn.recv()
 
