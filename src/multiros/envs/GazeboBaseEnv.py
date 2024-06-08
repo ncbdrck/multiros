@@ -26,7 +26,7 @@ class GazeboBaseEnv(gym.Env):
                  num_gazebo_steps: int = 1, gazebo_max_update_rate: float = None, gazebo_timestep: float = None,
                  kill_rosmaster: bool = True, kill_gazebo: bool = True, clean_logs: bool = False,
                  ros_port: str = None, gazebo_port: str = None, gazebo_pid=None, seed: int = None,
-                 unpause_pause_physics: bool = True, action_cycle_time: float = 0.0):
+                 unpause_pause_physics: bool = True, action_cycle_time: float = 0.0, log_internal_state: bool = False):
 
         """
         Initialize the GazeboBaseEnv.
@@ -66,6 +66,7 @@ class GazeboBaseEnv(gym.Env):
             seed (int): Seed for random number generator
             unpause_pause_physics (bool): Whether to unpause and pause Gazebo before and after each step call.
             action_cycle_time (float): The time to wait between applying actions.
+            log_internal_state (bool): Whether to log the internal state of the environment.
 
         """
 
@@ -93,6 +94,7 @@ class GazeboBaseEnv(gym.Env):
         self.user_seed = seed
         self.unpause_pause_physics = unpause_pause_physics
         self.action_cycle_time = action_cycle_time
+        self.log_internal_state = log_internal_state
 
         self.info = {}
         self.terminated = None
@@ -243,13 +245,15 @@ class GazeboBaseEnv(gym.Env):
             ros_common.change_ros_gazebo_master(ros_port=self.ros_port, gazebo_port=self.gazebo_port)
 
         # ----- Reset the env
-        rospy.loginfo(self.MAGENTA + "*************** Start Reset Env" + self.ENDC)
+        if self.log_internal_state:
+            rospy.loginfo(self.MAGENTA + "*************** Start Reset Env" + self.ENDC)
 
         # Reset the Gazebo and get the initial observation
         self._reset_gazebo(options=options)
         self.observation = self._get_observation()
 
-        rospy.loginfo(self.MAGENTA + "*************** End Reset Env" + self.ENDC)
+        if self.log_internal_state:
+            rospy.loginfo(self.MAGENTA + "*************** End Reset Env" + self.ENDC)
 
         return self.observation, self.info
 
