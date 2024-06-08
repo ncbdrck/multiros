@@ -41,7 +41,7 @@ class TimeLimitWrapper(gym.Wrapper, gym.utils.RecordConstructorArgs):
             truncated = True
             info['time_limit_reached'] = True
             if 'is_success' not in info:
-                info['is_success'] = 0.0
+                info['is_success'] = False
 
         return observation, reward, terminated, truncated, info
 
