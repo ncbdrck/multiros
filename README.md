@@ -7,6 +7,8 @@ MultiROS is an open-source Robot Operating System ([ROS](http://wiki.ros.org/))-
 This package supports training robots in both simulation and the real world. The simulation environment is based on [Gazebo](https://gazebosim.org/), providing a realistic simulation platform for testing and developing reinforcement learning algorithms. 
 
 Additionally, MultiROS provides interfaces and tools for seamlessly transferring learned policies to real-world robotic systems.
+
+For more information, please refer to the main [UniROS repository](https://github.com/ncbdrck/UniROS) which integrates MultiROS and [RealROS](https://github.com/ncbdrck/realros).
 ## Prerequisites
 
 Before installing MultiROS, make sure you have the following prerequisites:
@@ -131,7 +133,7 @@ To get started with MultiROS, follow these steps:
     ```
 ## Usage
 
-Refer to the [templates](https://github.com/ncbdrck/multiros/tree/main/src/multiros/templates) or the [examples](https://github.com/ncbdrck/reactorx200_ros_reacher) to see how MultiROS can create a simulation environment for RL applications.
+Refer to the [templates](https://github.com/ncbdrck/multiros/tree/main/src/multiros/templates) or the [examples](https://github.com/ncbdrck/rl_environments) to see how MultiROS can create a simulation environment for RL applications.
 
 The installation instructions for the examples are provided in the respective repositories.
 
