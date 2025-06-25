@@ -26,8 +26,9 @@ class GazeboGoalEnv(gymnasium_robotics.GoalEnv):
                  num_gazebo_steps: int = 1, gazebo_max_update_rate: float = None, gazebo_timestep: float = None,
                  kill_rosmaster: bool = True, kill_gazebo: bool = True, clean_logs: bool = False,
                  ros_port: str = None, gazebo_port: str = None, gazebo_pid=None, seed: int = None,
-                 unpause_pause_physics: bool = True, action_cycle_time: float = 0.0, log_internal_state: bool = False):
-
+                 unpause_pause_physics: bool = True, action_cycle_time: float = 0.0, log_internal_state: bool = False,
+                 controller_package_name: str = None
+                 ):
         """
         Initialize the GazeboGoalEnv.
 
@@ -67,6 +68,7 @@ class GazeboGoalEnv(gymnasium_robotics.GoalEnv):
             unpause_pause_physics (bool): Whether to unpause and pause Gazebo before and after each step.
             action_cycle_time (float): The time to wait between applying actions.
             log_internal_state (bool): Whether to log the internal state of the environment.
+            controller_package_name (str): The name of the package containing the controllers.
 
         """
 
@@ -149,7 +151,9 @@ class GazeboGoalEnv(gymnasium_robotics.GoalEnv):
                                                 pos_x=robot_pos_x, pos_y=robot_pos_y, pos_z=robot_pos_z,
                                                 ori_w=robot_ori_w, ori_x=robot_ori_x, ori_y=robot_ori_y,
                                                 ori_z=robot_ori_z, controllers_file=controllers_file,
-                                                controllers_list=self.controllers_list)
+                                                controllers_list=self.controllers_list,
+                                                controller_package_name=controller_package_name
+                                                )
 
         """
         Reset the controllers

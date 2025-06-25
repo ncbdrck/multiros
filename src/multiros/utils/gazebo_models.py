@@ -261,7 +261,9 @@ def spawn_robot_in_gazebo(pkg_name: str, model_urdf_file: str, model_urdf_folder
                           pos_x: float = 0.0, pos_y: float = 0.0, pos_z: float = 0.0,
                           ori_w: float = 0.0, ori_x: float = 0.0, ori_y: float = 0.0, ori_z: float = 0.0,
                           controllers_file: str = None, controllers_list: list = None,
-                          ros_port: str = None, gazebo_port: str = None) -> bool:
+                          ros_port: str = None, gazebo_port: str = None,
+                          controller_package_name: str = None
+                          ) -> bool:
     """
     Function to spawn a robot in Gazebo.
 
@@ -286,6 +288,7 @@ def spawn_robot_in_gazebo(pkg_name: str, model_urdf_file: str, model_urdf_folder
         controllers_list (list): A list of controller names to spawn. Defaults to None.
         ros_port (str): The ROS_MASTER_URI port (optional). Defaults to None.
         gazebo_port (str): The GAZEBO_MASTER_URI port (optional). Defaults to None.
+        controller_package_name (str): The name of the package containing the controllers. Defaults to None.
 
     Returns:
         bool: True if all operations were successful, False otherwise.
@@ -352,11 +355,18 @@ def spawn_robot_in_gazebo(pkg_name: str, model_urdf_file: str, model_urdf_folder
     # Launch controllers
     if controllers_file is not None:
         # Load the robot controllers from YAML files in the parameter server
-        if ros_common.ros_load_yaml(pkg_name=pkg_name, file_name=controllers_file, ns=ns):
-            rospy.loginfo("Robot controllers loaded successfully")
+        if controller_package_name is None:
+            if ros_common.ros_load_yaml(pkg_name=pkg_name, file_name=controllers_file, ns=ns):
+                rospy.loginfo("Robot controllers loaded successfully")
+            else:
+                rospy.logerr("Error while loading robot controllers")
+                return False
         else:
-            rospy.logerr("Error while loading robot controllers")
-            return False
+            if ros_common.ros_load_yaml(pkg_name=controller_package_name, file_name=controllers_file, ns=ns):
+                rospy.loginfo("Robot controllers loaded successfully")
+            else:
+                rospy.logerr("Error while loading robot controllers")
+                return False
 
         time.sleep(0.1)
 
