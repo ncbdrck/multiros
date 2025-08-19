@@ -70,6 +70,10 @@ MultiROS also requires the following additional packages:
 - [trac_ik_python](http://wiki.ros.org/trac_ik_python) for inverse kinematics (for Kinematics_pyrobot):
     ```shell
   # Download and install trac_ik_python
+	sudo apt-get install ros-noetic-trac-ik
+
+    or
+	
     cd ~/catkin_ws/src
     git clone https://bitbucket.org/traclabs/trac_ik.git
     ```
