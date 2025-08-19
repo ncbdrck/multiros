@@ -72,7 +72,7 @@ MultiROS also requires the following additional packages:
   # Download and install trac_ik_python
 	sudo apt-get install ros-noetic-trac-ik
 
-    or
+    # or
 	
     cd ~/catkin_ws/src
     git clone https://bitbucket.org/traclabs/trac_ik.git
