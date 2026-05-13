@@ -49,7 +49,11 @@ def load_ros_controller(controller_name: str, ns: str = None, max_retries: int =
         load_controller_service = '/controller_manager/load_controller'
 
     # wait for service to be available
-    rospy.wait_for_service(load_controller_service)
+    try:
+        rospy.wait_for_service(load_controller_service, timeout=30.0)
+    except rospy.ROSException as e:
+        rospy.logerr(f"Timeout (30s) waiting for service '{load_controller_service}': {e}")
+        return False
 
     # create proxy to the service
     load_controller = rospy.ServiceProxy(load_controller_service, LoadController)
@@ -119,7 +123,11 @@ def list_loaded_controllers(ns: str = None, max_retries: int = 5) -> list:
         list_controllers_service = '/controller_manager/list_controllers'
 
     # wait for service to be available
-    rospy.wait_for_service(list_controllers_service)
+    try:
+        rospy.wait_for_service(list_controllers_service, timeout=30.0)
+    except rospy.ROSException as e:
+        rospy.logerr(f"Timeout (30s) waiting for service '{list_controllers_service}': {e}")
+        return []
 
     # create proxy to the service
     list_controllers = rospy.ServiceProxy(list_controllers_service, ListControllers)
@@ -164,7 +172,11 @@ def unload_ros_controller(controller_name: str, ns: str = None, max_retries: int
         unload_controller_service = '/controller_manager/unload_controller'
 
     # wait for service to be available
-    rospy.wait_for_service(unload_controller_service)
+    try:
+        rospy.wait_for_service(unload_controller_service, timeout=30.0)
+    except rospy.ROSException as e:
+        rospy.logerr(f"Timeout (30s) waiting for service '{unload_controller_service}': {e}")
+        return False
 
     # create proxy to the service
     unload_controller = rospy.ServiceProxy(unload_controller_service, UnloadController)
@@ -240,7 +252,11 @@ def switch_controllers(start_controllers_list: list, stop_controllers_list: list
     else:
         switch_controller_service = '/controller_manager/switch_controller'
 
-    rospy.wait_for_service(switch_controller_service)
+    try:
+        rospy.wait_for_service(switch_controller_service, timeout=30.0)
+    except rospy.ROSException as e:
+        rospy.logerr(f"Timeout (30s) waiting for service '{switch_controller_service}': {e}")
+        return False
     switch_controller = rospy.ServiceProxy(switch_controller_service, SwitchController)
 
     # Attempt to switch controllers

@@ -44,7 +44,11 @@ def get_gazebo_physics_properties(ros_port: str = None, gazebo_port: str = None)
         ros_common.change_ros_gazebo_master(ros_port=ros_port, gazebo_port=gazebo_port)
 
     # Wait for the 'get_physics_properties' service to be available
-    rospy.wait_for_service('/gazebo/get_physics_properties')
+    try:
+        rospy.wait_for_service('/gazebo/get_physics_properties', timeout=30.0)
+    except rospy.ROSException as e:
+        rospy.logerr(f"Timeout (30s) waiting for service '/gazebo/get_physics_properties': {e}")
+        return None
 
     try:
         # Create a service proxy for the 'get_physics_properties' service
@@ -57,6 +61,7 @@ def get_gazebo_physics_properties(ros_port: str = None, gazebo_port: str = None)
 
     except rospy.ServiceException as e:
         rospy.logerr(f"Service call failed: {e}")
+        return None
 
 
 def set_gazebo_physics_properties(time_step: float = None, max_update_rate: float = None, gravity: list = None,
@@ -91,7 +96,11 @@ def set_gazebo_physics_properties(time_step: float = None, max_update_rate: floa
     set_physics_properties_request.ode_config = ode_config if ode_config is not None else physics_properties.ode_config
 
     # Wait for the 'set_physics_properties' service to be available
-    rospy.wait_for_service('/gazebo/set_physics_properties')
+    try:
+        rospy.wait_for_service('/gazebo/set_physics_properties', timeout=30.0)
+    except rospy.ROSException as e:
+        rospy.logerr(f"Timeout (30s) waiting for service '/gazebo/set_physics_properties': {e}")
+        return False
     try:
         # Create a service proxy for the 'set_physics_properties' service
         set_physics_properties = rospy.ServiceProxy('/gazebo/set_physics_properties', SetPhysicsProperties)
@@ -161,7 +170,11 @@ def set_gazebo_max_update_rate(real_time_factor: float, ros_port: str = None, ga
     set_physics_properties_request.ode_config = physics_properties.ode_config
 
     # Wait for the 'set_physics_properties' service to be available
-    rospy.wait_for_service('/gazebo/set_physics_properties')
+    try:
+        rospy.wait_for_service('/gazebo/set_physics_properties', timeout=30.0)
+    except rospy.ROSException as e:
+        rospy.logerr(f"Timeout (30s) waiting for service '/gazebo/set_physics_properties': {e}")
+        return False
     try:
         # Create a service proxy for the 'set_physics_properties' service
         set_physics_properties = rospy.ServiceProxy('/gazebo/set_physics_properties', SetPhysicsProperties)
@@ -227,7 +240,11 @@ def set_gazebo_time_step(time_step: float, ros_port: str = None, gazebo_port: st
     set_physics_properties_request.ode_config = physics_properties.ode_config
 
     # Wait for the 'set_physics_properties' service to be available
-    rospy.wait_for_service('/gazebo/set_physics_properties')
+    try:
+        rospy.wait_for_service('/gazebo/set_physics_properties', timeout=30.0)
+    except rospy.ROSException as e:
+        rospy.logerr(f"Timeout (30s) waiting for service '/gazebo/set_physics_properties': {e}")
+        return False
     try:
         # Create a service proxy for the 'set_physics_properties' service
         set_physics_properties = rospy.ServiceProxy('/gazebo/set_physics_properties', SetPhysicsProperties)
@@ -293,7 +310,11 @@ def set_gazebo_gravity(gravity: List[float], ros_port: str = None, gazebo_port: 
     set_physics_properties_request.ode_config = physics_properties.ode_config
 
     # Wait for the 'set_physics_properties' service to be available
-    rospy.wait_for_service('/gazebo/set_physics_properties')
+    try:
+        rospy.wait_for_service('/gazebo/set_physics_properties', timeout=30.0)
+    except rospy.ROSException as e:
+        rospy.logerr(f"Timeout (30s) waiting for service '/gazebo/set_physics_properties': {e}")
+        return False
     try:
         # Create a service proxy for the 'set_physics_properties' service
         set_physics_properties = rospy.ServiceProxy('/gazebo/set_physics_properties', SetPhysicsProperties)
@@ -358,7 +379,11 @@ def set_gazebo_ode_physics(ode_config: ODEPhysics, ros_port: str = None, gazebo_
     set_physics_properties_request.ode_config = ode_config
 
     # Wait for the 'set_physics_properties' service to be available
-    rospy.wait_for_service('/gazebo/set_physics_properties')
+    try:
+        rospy.wait_for_service('/gazebo/set_physics_properties', timeout=30.0)
+    except rospy.ROSException as e:
+        rospy.logerr(f"Timeout (30s) waiting for service '/gazebo/set_physics_properties': {e}")
+        return False
     try:
         # Create a service proxy for the 'set_physics_properties' service
         set_physics_properties = rospy.ServiceProxy('/gazebo/set_physics_properties', SetPhysicsProperties)

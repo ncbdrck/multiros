@@ -68,7 +68,11 @@ def gazebo_spawn_urdf(model_string=None, param_name=None, model_name="robot_0", 
         ros_common.change_ros_gazebo_master(ros_port=ros_port, gazebo_port=gazebo_port)
 
     # Wait for the Gazebo spawn service
-    rospy.wait_for_service("/gazebo/spawn_urdf_model")
+    try:
+        rospy.wait_for_service("/gazebo/spawn_urdf_model", timeout=30.0)
+    except rospy.ROSException as e:
+        rospy.logerr(f"Timeout (30s) waiting for service '/gazebo/spawn_urdf_model': {e}")
+        return False, f"Error: timeout waiting for /gazebo/spawn_urdf_model"
     client_srv = rospy.ServiceProxy("/gazebo/spawn_urdf_model", SpawnModel)
 
     # Get the URDF data from a parameter if it was not provided directly
@@ -138,7 +142,11 @@ def spawn_model_in_gazebo(model_path=None, pkg_name=None, file_name=None, model_
         ros_common.change_ros_gazebo_master(ros_port=ros_port, gazebo_port=gazebo_port)
 
     # Wait for the Gazebo spawn service
-    rospy.wait_for_service("/gazebo/spawn_sdf_model")
+    try:
+        rospy.wait_for_service("/gazebo/spawn_sdf_model", timeout=30.0)
+    except rospy.ROSException as e:
+        rospy.logerr(f"Timeout (30s) waiting for service '/gazebo/spawn_sdf_model': {e}")
+        return False
     client_srv = rospy.ServiceProxy("/gazebo/spawn_sdf_model", SpawnModel)
 
     # Determine the path of the SDF file
@@ -400,7 +408,11 @@ def gazebo_get_world_properties(ros_port=None, gazebo_port=None) -> Tuple[bool, 
         ros_common.change_ros_gazebo_master(ros_port=ros_port, gazebo_port=gazebo_port)
 
     # Wait for the /gazebo/get_world_properties service
-    rospy.wait_for_service("/gazebo/get_world_properties")
+    try:
+        rospy.wait_for_service("/gazebo/get_world_properties", timeout=30.0)
+    except rospy.ROSException as e:
+        rospy.logerr(f"Timeout (30s) waiting for service '/gazebo/get_world_properties': {e}")
+        return False, 0.0, []
     client_get_world_properties = rospy.ServiceProxy("/gazebo/get_world_properties", GetWorldProperties)
 
     # Call the /gazebo/get_world_properties service
@@ -430,7 +442,11 @@ def gazebo_delete_model(model_name: str, ros_port=None, gazebo_port=None) -> Tup
         ros_common.change_ros_gazebo_master(ros_port=ros_port, gazebo_port=gazebo_port)
 
     # Wait for the /gazebo/delete_model service
-    rospy.wait_for_service("/gazebo/delete_model")
+    try:
+        rospy.wait_for_service("/gazebo/delete_model", timeout=30.0)
+    except rospy.ROSException as e:
+        rospy.logerr(f"Timeout (30s) waiting for service '/gazebo/delete_model': {e}")
+        return False
     client_delete_model = rospy.ServiceProxy("/gazebo/delete_model", DeleteModel)
 
     # Call the /gazebo/delete_model service
@@ -512,7 +528,11 @@ def gazebo_get_model_state(model_name: str, relative_entity_name: str = 'world',
         ros_common.change_ros_gazebo_master(ros_port=ros_port, gazebo_port=gazebo_port)
 
     # Wait for the /gazebo/get_model_state service
-    rospy.wait_for_service("/gazebo/get_model_state")
+    try:
+        rospy.wait_for_service("/gazebo/get_model_state", timeout=30.0)
+    except rospy.ROSException as e:
+        rospy.logerr(f"Timeout (30s) waiting for service '/gazebo/get_model_state': {e}")
+        return Header(), Pose(), Twist(), False
     client_get_model_state = rospy.ServiceProxy("/gazebo/get_model_state", GetModelState)
 
     # Call the /gazebo/get_model_state service
@@ -580,7 +600,11 @@ def gazebo_set_model_state(model_name: str, reference_frame: str = "world",
     model_state.twist.angular.z = ang_vel_z
 
     # Wait for the /gazebo/set_model_state service
-    rospy.wait_for_service("/gazebo/set_model_state")
+    try:
+        rospy.wait_for_service("/gazebo/set_model_state", timeout=30.0)
+    except rospy.ROSException as e:
+        rospy.logerr(f"Timeout (30s) waiting for service '/gazebo/set_model_state': {e}")
+        return False
     client_set_model_state = rospy.ServiceProxy("/gazebo/set_model_state", SetModelState)
 
     # Call the /gazebo/set_model_state service

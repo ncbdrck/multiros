@@ -162,7 +162,12 @@ def launch_gazebo(launch_roscore=True, port=None, paused=False, use_sim_time=Tru
     time.sleep(5.0)
 
     # waiting for gazebo to done launching
-    rospy.wait_for_service('/gazebo/pause_physics')
+    try:
+        rospy.wait_for_service('/gazebo/pause_physics', timeout=30.0)
+    except rospy.ROSException as e:
+        rospy.logerr(f"Timeout (30s) waiting for service '/gazebo/pause_physics' "
+                     f"after launching Gazebo on port {gazebo_port}: {e}")
+        return None, None, None
 
     # if launch_roscore in False, ignore the first two returns
     return ros_port, gazebo_port, process
@@ -225,7 +230,11 @@ def reset_gazebo(reset_type: str = "simulation", max_tries: int = 5, ros_port: s
     service_name = "/gazebo/reset_simulation" if reset_type == "simulation" else "/gazebo/reset_world"
 
     # Wait for the service to be available
-    rospy.wait_for_service(service_name)
+    try:
+        rospy.wait_for_service(service_name, timeout=30.0)
+    except rospy.ROSException as e:
+        rospy.logerr(f"Timeout (30s) waiting for service '{service_name}': {e}")
+        return False
 
     # Try to reset the simulation or world up to max_tries times
     for i in range(max_tries):
@@ -268,7 +277,11 @@ def pause_gazebo(max_tries: int = 5, ros_port: str = None, gazebo_port: str = No
         ros_common.change_ros_gazebo_master(ros_port=ros_port, gazebo_port=gazebo_port)
 
     # Wait for the 'pause_physics' service to be available
-    rospy.wait_for_service('/gazebo/pause_physics')
+    try:
+        rospy.wait_for_service('/gazebo/pause_physics', timeout=30.0)
+    except rospy.ROSException as e:
+        rospy.logerr(f"Timeout (30s) waiting for service '/gazebo/pause_physics': {e}")
+        return False
 
     # Try to pause the simulation up to max_tries times
     for i in range(max_tries):
@@ -310,7 +323,11 @@ def unpause_gazebo(max_tries: int = 5, ros_port: str = None, gazebo_port: str = 
         ros_common.change_ros_gazebo_master(ros_port=ros_port, gazebo_port=gazebo_port)
 
     # Wait for the 'unpause_physics' service to be available
-    rospy.wait_for_service('/gazebo/unpause_physics')
+    try:
+        rospy.wait_for_service('/gazebo/unpause_physics', timeout=30.0)
+    except rospy.ROSException as e:
+        rospy.logerr(f"Timeout (30s) waiting for service '/gazebo/unpause_physics': {e}")
+        return False
 
     # Try to unpause the simulation up to max_tries times
     for i in range(max_tries):
