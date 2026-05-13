@@ -518,7 +518,7 @@ class RosMarkerArray:
 
             # Update the lifetime of the marker if provided
             if lifetime is not None:
-                marker.set_lifetime(lifetime)
+                marker.set_duration(lifetime)
 
     def publish(self):
         """
