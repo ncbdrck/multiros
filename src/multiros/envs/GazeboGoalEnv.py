@@ -93,7 +93,11 @@ class GazeboGoalEnv(gymnasium_robotics.GoalEnv):
         self.ros_port = ros_port
         self.gazebo_port = gazebo_port
         self.gazebo_pid = gazebo_pid
+        # Constructor-supplied seed. Used once on the first reset() that
+        # doesn't get an explicit seed= kwarg; after that np_random
+        # advances normally (Gymnasium semantics).
         self.user_seed = seed
+        self._initial_seed_consumed = False
         self.unpause_pause_physics = unpause_pause_physics
         self.action_cycle_time = action_cycle_time
         self.log_internal_state = log_internal_state
@@ -239,11 +243,18 @@ class GazeboGoalEnv(gymnasium_robotics.GoalEnv):
             info (dict): Additional information about the environment. Similar to the info returned by step().
         """
 
-        # set the seed (standard way to set the seed in gymnasium)
-        if self.user_seed is not None:
-            super().reset(seed=self.user_seed)
-        else:
-            super().reset(seed=seed)
+        # Gymnasium-correct seed handling:
+        #   * If the caller passes seed=X, honour it (overrides constructor seed).
+        #   * Otherwise, on the very first reset, fall back to the
+        #     constructor seed (consume it once). After that, leave
+        #     seed=None so np_random advances normally between episodes.
+        # The old behaviour re-applied the constructor seed on every reset,
+        # which violated Gymnasium semantics and made every episode start
+        # from the same np_random state.
+        if seed is None and not self._initial_seed_consumed:
+            seed = self.user_seed
+            self._initial_seed_consumed = True
+        super().reset(seed=seed)
 
         # reinitialize the info dictionary
         self.info = {}
