@@ -8,7 +8,6 @@ from gymnasium.envs.registration import register
 from multiros.envs import GazeboGoalEnv
 
 import rospy
-import rostopic
 
 # core modules of the framework
 from multiros.utils import gazebo_core
