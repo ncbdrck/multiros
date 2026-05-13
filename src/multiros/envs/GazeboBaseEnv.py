@@ -19,7 +19,7 @@ class GazeboBaseEnv(gym.Env):
                  urdf_folder: str = "/urdf", urdf_xacro_args: List[str] = None, namespace: str = "/",
                  robot_state_publisher_max_freq: float = None, new_robot_state_term: bool = False,
                  robot_model_name: str = "robot", robot_ref_frame: str = "world",
-                 robot_pos_x: float = 0.0, robot_pos_y: float = 0.0, robot_pos_z: float = 0.0, robot_ori_w: float = 0.0,
+                 robot_pos_x: float = 0.0, robot_pos_y: float = 0.0, robot_pos_z: float = 0.0, robot_ori_w: float = 1.0,
                  robot_ori_x: float = 0.0, robot_ori_y: float = 0.0, robot_ori_z: float = 0.0,
                  controllers_file: str = None, controllers_list: List[str] = None,
                  reset_controllers: bool = False, reset_mode: str = "world", sim_step_mode: int = 1,

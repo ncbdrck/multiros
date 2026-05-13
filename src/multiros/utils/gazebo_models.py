@@ -259,7 +259,7 @@ def spawn_robot_in_gazebo(pkg_name: str, model_urdf_file: str, model_urdf_folder
                           args_xacro: list = None, pub_freq: float = None, rob_st_term: bool = False,
                           gazebo_name: str = "robot", gz_ref_frame: str = "world",
                           pos_x: float = 0.0, pos_y: float = 0.0, pos_z: float = 0.0,
-                          ori_w: float = 0.0, ori_x: float = 0.0, ori_y: float = 0.0, ori_z: float = 0.0,
+                          ori_w: float = 1.0, ori_x: float = 0.0, ori_y: float = 0.0, ori_z: float = 0.0,
                           controllers_file: str = None, controllers_list: list = None,
                           ros_port: str = None, gazebo_port: str = None,
                           controller_package_name: str = None
@@ -280,7 +280,7 @@ def spawn_robot_in_gazebo(pkg_name: str, model_urdf_file: str, model_urdf_folder
         pos_x (float): The x position of the robot model in Gazebo. Defaults to 0.0.
         pos_y (float): The y position of the robot model in Gazebo. Defaults to 0.0.
         pos_z (float): The z position of the robot model in Gazebo. Defaults to 0.0.
-        ori_w (float): The w orientation of the robot model in Gazebo. Defaults to 0.0.
+        ori_w (float): The w orientation of the robot model in Gazebo. Defaults to 1.0.
         ori_x (float): The x orientation of the robot model in Gazebo. Defaults to 0.0.
         ori_y (float): The y orientation of the robot model in Gazebo. Defaults to 0.0.
         ori_z (float): The z orientation of the robot model in Gazebo. Defaults to 0.0.
@@ -524,7 +524,7 @@ def gazebo_get_model_state(model_name: str, relative_entity_name: str = 'world',
 
 def gazebo_set_model_state(model_name: str, reference_frame: str = "world",
                            pos_x: float = 0.0, pos_y: float = 0.0, pos_z: float = 0.0,
-                           ori_x: float = 0.0, ori_y: float = 0.0, ori_z: float = 0.0, ori_w: float = 0.0,
+                           ori_x: float = 0.0, ori_y: float = 0.0, ori_z: float = 0.0, ori_w: float = 1.0,
                            lin_vel_x: float = 0.0, lin_vel_y: float = 0.0, lin_vel_z: float = 0.0,
                            ang_vel_x: float = 0.0, ang_vel_y: float = 0.0, ang_vel_z: float = 0.0,
                            sleep_time: float = 0.05,
