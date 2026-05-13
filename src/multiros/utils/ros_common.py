@@ -886,12 +886,12 @@ def change_ros_master_multi_device(remote_ip: str, local_ip: str, remote_ros_por
     """
 
     # Temporarily assigning values for the ROS_MASTER_URI environment variable
-    os.environ["ROS_MASTER_URI"] = f"{remote_ip}:{remote_ros_port}"
+    os.environ["ROS_MASTER_URI"] = f"http://{remote_ip}:{remote_ros_port}"
 
     # Temporarily assigning values for the ROS_HOSTNAME environment variable
     os.environ["ROS_HOSTNAME"] = f"{local_ip}"
 
-    rospy.logdebug(f"Changed ROS_MASTER_URI to: {remote_ip}:{remote_ros_port}")
+    rospy.logdebug(f"Changed ROS_MASTER_URI to: http://{remote_ip}:{remote_ros_port}")
 
     return True
 
