@@ -456,34 +456,40 @@ def clean_ros_logs() -> bool:
 
 def source_workspace(abs_path) -> bool:
     """
-    Function to source the ros workspace.
+    DEPRECATED no-op.
+
+    This function used to launch an xterm that ran
+    ``source devel/setup.bash`` plus ``rospack profile``. That approach
+    cannot work: a ``source`` in a child shell mutates only the child's
+    environment, and the child dies with the subprocess. The calling
+    Python process's ``os.environ`` / ``PYTHONPATH`` are unaffected, so
+    importing packages from the workspace will not work.
+
+    To use a ROS workspace from a Python process, source it in the
+    shell that launches Python (i.e. ``source devel/setup.bash`` in the
+    terminal, then run ``python``). If you only need to refresh
+    rospack's cache, run ``rospack profile`` directly.
+
+    This function is preserved for backwards compatibility but is now
+    a no-op that emits a DeprecationWarning and a rospy logwarn. It
+    will be removed in a future release.
 
     Args:
-        abs_path (str): Absolute path of the ros workspace.
+        abs_path (str): Unused. Kept for signature compatibility.
 
     Returns:
-        bool: True if all the ros logs were closed and False otherwise.
+        bool: Always False.
     """
-
-    if os.path.exists(abs_path) is False:
-        rospy.logwarn("A ROS workspace does not exists in the: " + abs_path + "\n" +
-                      "This should be the *absolute* path of the workspace!")
-        return False
-
-    elif os.path.exists(abs_path + "/devel/") is False:
-        rospy.logwarn("devel folder does not exists in the: " + abs_path)
-        return False
-
-    term_cmd = "cd " + abs_path + ";"
-    term_cmd = term_cmd + "source devel/setup.bash"
-    subprocess.Popen("xterm -e ' " + term_cmd + "'", shell=True).wait()
-
-    term_cmd = "rospack profile"
-    subprocess.Popen("xterm -e ' " + term_cmd + "'", shell=True).wait()
-
-    rospy.loginfo("successfully sourced the ROS workspace!")
-
-    return True
+    import warnings
+    msg = (
+        "source_workspace() cannot mutate the calling Python process's "
+        "environment. Source the ROS workspace in the shell that "
+        "launches Python instead. This function is a no-op and will "
+        "be removed in a future release."
+    )
+    warnings.warn(msg, DeprecationWarning, stacklevel=2)
+    rospy.logwarn(msg)
+    return False
 
 
 """
