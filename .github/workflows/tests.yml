@@ -2,9 +2,9 @@ name: tests
 
 on:
   push:
-    branches: [main, master, gymnasium, cleanup-2026, tier2-2026]
+    branches: [main, master, gymnasium, tier2-2026]
   pull_request:
-    branches: [main, master, gymnasium, cleanup-2026, tier2-2026]
+    branches: [main, master, gymnasium, tier2-2026]
   workflow_dispatch: {}
 
 jobs:
@@ -28,14 +28,14 @@ jobs:
 
       # multiros's proxy class + shared utilities live in UniROS. Clone the
       # branch matching whatever branch this workflow is running on, so a PR
-      # or push on multiros's cleanup-2026 pulls UniROS's cleanup-2026, etc.
+      # or push on multiros's tier2-2026 pulls UniROS's tier2-2026, etc.
       # Falls back to UniROS's default branch if there's no match.
       #
-      # IMPORTANT: when fast-forwarding cleanup-2026 → gymnasium across the
-      # ecosystem, merge UniROS *first* and the dependent repos after. If a
-      # dependent repo (multiros, realros) is pushed before UniROS, its CI
-      # will check out the *old* UniROS gymnasium tip (missing the new
-      # uniros._proxy and uniros.utils packages) and fail to import them.
+      # IMPORTANT: when fast-forwarding an integration branch → gymnasium
+      # across the ecosystem, merge UniROS *first* and the dependent repos
+      # after. If a dependent repo (multiros, realros) is pushed before
+      # UniROS, its CI checks out the *old* UniROS gymnasium tip (missing
+      # the new uniros._proxy / uniros.utils packages) and fails to import.
       - name: Check out UniROS
         uses: actions/checkout@v4
         with:
