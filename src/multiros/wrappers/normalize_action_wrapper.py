@@ -1,3 +1,5 @@
+from typing import Any, Dict, Tuple
+
 import numpy as np
 import gymnasium as gym
 
@@ -18,7 +20,7 @@ class NormalizeActionWrapper(gym.Wrapper):
         ValueError: If the action space of the environment is not of type Box.
     """
 
-    def __init__(self, env):
+    def __init__(self, env: gym.Env) -> None:
         # init the wrapper
         super().__init__(env)
 
@@ -36,7 +38,7 @@ class NormalizeActionWrapper(gym.Wrapper):
         # Set the action space of the wrapper to be a Box with low=-1.0 and high=1.0
         self.action_space = gym.spaces.Box(low=-1.0, high=1.0, shape=self.env.action_space.shape, dtype=np.float32)
 
-    def denormalize_action(self, action):
+    def denormalize_action(self, action: np.ndarray) -> np.ndarray:
         """
         Normalize the action to the range of the original action space.
 
@@ -54,7 +56,7 @@ class NormalizeActionWrapper(gym.Wrapper):
 
         return action
 
-    def reverse_action(self, action):
+    def reverse_action(self, action: np.ndarray) -> np.ndarray:
         """
         Reverse the normalization of an action.
 
@@ -69,7 +71,7 @@ class NormalizeActionWrapper(gym.Wrapper):
 
         return action
 
-    def step(self, action):
+    def step(self, action: np.ndarray) -> Tuple[Any, float, bool, bool, Dict[str, Any]]:
         """
         Take a step in the environment using a normalized action.
 
