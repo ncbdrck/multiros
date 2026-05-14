@@ -840,7 +840,7 @@ def ros_launch_launcher(pkg_name: Optional[str] = None,
     term_cmd = construct_roslaunch_command(pkg_name, launch_file_name, launch_file_abs_path)
 
     if term_cmd is None:
-        print("Launch Failed! Requires either the absolute path or the pkg_name and the launch_file_name as input!")
+        rospy.logerr("Launch Failed! Requires either the absolute path or the pkg_name and the launch_file_name as input!")
         return False
 
     if args is not None:
@@ -883,7 +883,7 @@ def construct_roslaunch_command(pkg_name: Optional[str],
 
         file_path = os.path.join(pkg_path, "launch", launch_file_name)
         if os.path.exists(file_path) is False:
-            print(f"Launch file {launch_file_name} in {file_path} does not exist!")
+            rospy.logerr(f"Launch file {launch_file_name} in {file_path} does not exist!")
             return None
 
         return f"roslaunch {pkg_name} {launch_file_name}"
@@ -891,7 +891,7 @@ def construct_roslaunch_command(pkg_name: Optional[str],
     # or roslaunch from a path
     elif launch_file_abs_path is not None:
         if os.path.exists(launch_file_abs_path) is False:
-            print(f"Launch file {launch_file_abs_path} does not exist!")
+            rospy.logerr(f"Launch file {launch_file_abs_path} does not exist!")
             return None
 
         return f"roslaunch {launch_file_abs_path}"
@@ -949,7 +949,7 @@ def ros_node_launcher(pkg_name: str, node_name: str,
 
     # launching the roscore
     if launch_master:
-        print("Launching ROS Master")
+        rospy.loginfo("Launching ROS Master")
         if ros_port is not None:
             rs_port, gz_port = launch_roscore(port=int(ros_port))
         else:
@@ -959,10 +959,10 @@ def ros_node_launcher(pkg_name: str, node_name: str,
     try:
         rospy.get_master().getPid()
     except ConnectionRefusedError:
-        print("ROS Master not running!")
+        rospy.loginfo("ROS Master not running!")
         return rs_port, gz_port, False
     else:
-        print("ROS Master is running!")
+        rospy.loginfo("ROS Master is running!")
 
     term_cmd = construct_rosrun_command(pkg_name, node_name, name=name, ns=ns, output=output)
 
@@ -1072,19 +1072,19 @@ def ros_load_yaml(pkg_name: Optional[str] = None,
 
         file_abs_path = pkg_path + "/config/" + file_name
         if os.path.exists(pkg_path + "/config/" + file_name) is False:
-            print(f"Config file {file_name} in {file_abs_path} does not exist")
+            rospy.logerr(f"Config file {file_name} in {file_abs_path} does not exist")
             return False
 
     # If pkg_name and file_name are both None but file_abs_path is not None,
     # check if the YAML file exists at the given absolute path
     elif file_abs_path is not None:
         if os.path.exists(file_abs_path) is False:
-            print(f"Config file {file_abs_path} does not exist!")
+            rospy.logerr(f"Config file {file_abs_path} does not exist!")
             return False
 
     # If none of these conditions are met, return False
     else:
-        print("Load Failed! Requires either the absolute path or the pkg_name and the file_name as input!")
+        rospy.logerr("Load Failed! Requires either the absolute path or the pkg_name and the file_name as input!")
         return False
 
     # Load the parameters from the YAML file and upload them to the ROS Parameter Server under the given namespace
