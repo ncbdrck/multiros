@@ -27,15 +27,18 @@ jobs:
           path: multiros
 
       # multiros's proxy class + shared utilities live in UniROS. Clone the
-      # branch matching whatever branch this workflow is running on, so a PR
-      # or push on a feature branch pulls UniROS's matching branch, with
-      # UniROS's default branch as the fallback when no match exists.
+      # branch matching whatever branch this workflow is running on.
       #
-      # IMPORTANT: when fast-forwarding an integration branch → gymnasium
-      # across the ecosystem, merge UniROS *first* and the dependent repos
-      # after. If a dependent repo (multiros, realros) is pushed before
-      # UniROS, its CI checks out the *old* UniROS gymnasium tip (missing
-      # the new uniros._proxy / uniros.utils packages) and fails to import.
+      # LOCKSTEP REQUIREMENT: this checkout has no fallback — the matching
+      # branch MUST exist in UniROS, otherwise actions/checkout will fail
+      # the job. When pushing a new feature branch here, push the same
+      # branch name to UniROS first.
+      #
+      # When merging an integration branch into the default branch across
+      # the ecosystem, merge UniROS *first* and the dependent repos after.
+      # Otherwise this CI clones the *old* UniROS default-branch tip
+      # (missing the new uniros._proxy / uniros.utils packages) and fails
+      # to import.
       - name: Check out UniROS
         uses: actions/checkout@v4
         with:
