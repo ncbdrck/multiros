@@ -28,8 +28,8 @@ jobs:
 
       # multiros's proxy class + shared utilities live in UniROS. Clone the
       # branch matching whatever branch this workflow is running on, so a PR
-      # or push on multiros's tier2-2026 pulls UniROS's tier2-2026, etc.
-      # Falls back to UniROS's default branch if there's no match.
+      # or push on a feature branch pulls UniROS's matching branch, with
+      # UniROS's default branch as the fallback when no match exists.
       #
       # IMPORTANT: when fast-forwarding an integration branch → gymnasium
       # across the ecosystem, merge UniROS *first* and the dependent repos
