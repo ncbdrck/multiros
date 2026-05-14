@@ -149,6 +149,10 @@ def launch_gazebo(launch_roscore=True, port=None, paused=False, use_sim_time=Tru
         else:
             ros_port, gazebo_port = ros_common.launch_roscore()
 
+    # Snapshot existing gzserver/gzclient PIDs so we can identify the
+    # ones THIS launch creates (and only kill those on Ctrl+C).
+    pre_gazebo_pids = _gazebo_pids()
+
     # Launch gazebo
     if launch_new_term:
         term_cmd = f"xterm -e '{term_cmd}'"
@@ -169,8 +173,35 @@ def launch_gazebo(launch_roscore=True, port=None, paused=False, use_sim_time=Tru
                      f"after launching Gazebo on port {gazebo_port}: {e}")
         return None, None, None
 
+    # Identify gzserver/gzclient PIDs spawned by THIS launch (set diff
+    # vs. the snapshot taken before Popen). Register them with the
+    # managed-process registry so SIGINT / atexit can clean them up.
+    new_gazebo_pids = sorted(_gazebo_pids() - pre_gazebo_pids)
+    ros_common.register_managed_process(
+        process,
+        gazebo_pids=new_gazebo_pids,
+        gazebo_port=gazebo_port,
+        kind="gazebo",
+    )
+
     # if launch_roscore in False, ignore the first two returns
     return ros_port, gazebo_port, process
+
+
+def _gazebo_pids() -> set:
+    """Return PIDs of currently running gzserver / gzclient processes."""
+    pids: set = set()
+    for name in ("gzserver", "gzclient"):
+        try:
+            out = subprocess.run(
+                ["pgrep", "-x", name],
+                stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
+                timeout=5,
+            )
+            pids.update(int(p) for p in out.stdout.decode().split() if p)
+        except Exception:
+            pass
+    return pids
 
 
 """

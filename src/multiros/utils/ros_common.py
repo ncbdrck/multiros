@@ -37,8 +37,11 @@ import random
 import socket
 import warnings
 import fcntl
+import atexit
+import signal
+import threading
 import xacro
-from typing import Tuple, Union
+from typing import Tuple, Union, List, Dict, Any
 
 # Best-effort log of ports we've launched roscores on. Not load-bearing
 # for allocation correctness: the kernel decides what's free via
@@ -46,6 +49,156 @@ from typing import Tuple, Union
 # my multiros/realros scripts spawn?"). flock-protected so two parallel
 # scripts can both append safely.
 _PORT_LOG_PATH = '/tmp/ros_master_ports_multiros.txt'
+
+# ----------------------------------------------------------------------
+# Managed-process registry: track roscore/Gazebo processes this Python
+# process spawned so we can clean them up on Ctrl+C or normal exit.
+# Scoped to processes WE launched, not host-wide — see Round 7.
+# ----------------------------------------------------------------------
+_managed_lock = threading.Lock()
+_managed_processes: List[Dict[str, Any]] = []
+_cleanup_done = False
+_handlers_installed = False
+_prev_sigint_handler: Any = None
+
+
+def register_managed_process(popen, **selectors) -> None:
+    """
+    Register a process spawned by this script for automatic cleanup
+    on Ctrl+C or normal interpreter exit.
+
+    Cleanup is scoped: only processes registered here are touched.
+    Pre-existing ROS/Gazebo sessions on the host are NOT affected
+    (unlike ``kill_all_host_ros_and_gazebo``).
+
+    Args:
+        popen: A ``subprocess.Popen`` (typically the xterm wrapper
+            shell). ``.terminate()`` will be called on cleanup.
+        **selectors: Optional fallback identifiers for cleanup when
+            killing the Popen alone is not enough (e.g. because the
+            child detached). Recognised keys:
+              - ``roscore_port`` (str|int): triggers
+                ``pkill -f "roscore -p <port>"``.
+              - ``gazebo_pids`` (list[int]): PIDs to SIGTERM/SIGKILL.
+              - ``kind`` (str): free-form label for logging.
+    """
+    global _handlers_installed, _prev_sigint_handler
+    with _managed_lock:
+        _managed_processes.append({"popen": popen, "selectors": dict(selectors)})
+        already_installed = _handlers_installed
+        _handlers_installed = True
+
+    if not already_installed:
+        atexit.register(_cleanup_managed_processes)
+        try:
+            _prev_sigint_handler = signal.signal(signal.SIGINT, _sigint_handler)
+        except ValueError:
+            # signal.signal can only be called from the main thread;
+            # atexit will still fire on normal interpreter shutdown.
+            _prev_sigint_handler = None
+
+
+def _sigint_handler(signum, frame):
+    """
+    On Ctrl+C: tear down managed processes once, then chain to the
+    previously-installed SIGINT handler (or KeyboardInterrupt) so the
+    user's normal interrupt semantics still apply. A second Ctrl+C
+    during cleanup will use the chained handler and exit immediately.
+    """
+    # Restore the previous handler BEFORE doing cleanup so a second
+    # Ctrl+C during cleanup hits the default and bails out hard.
+    try:
+        signal.signal(signal.SIGINT, _prev_sigint_handler if _prev_sigint_handler else signal.SIG_DFL)
+    except (ValueError, TypeError):
+        signal.signal(signal.SIGINT, signal.SIG_DFL)
+
+    try:
+        rospy.loginfo("SIGINT received; cleaning up spawned roscore/Gazebo...")
+    except Exception:
+        print("[multiros] SIGINT received; cleaning up spawned roscore/Gazebo...")
+
+    _cleanup_managed_processes()
+
+    # Chain: call the previous handler or raise KeyboardInterrupt
+    if callable(_prev_sigint_handler) and _prev_sigint_handler not in (signal.SIG_DFL, signal.SIG_IGN):
+        try:
+            _prev_sigint_handler(signum, frame)
+            return
+        except Exception:
+            pass
+    raise KeyboardInterrupt
+
+
+def _cleanup_managed_processes() -> None:
+    """
+    Tear down every registered managed process. Idempotent — safe to
+    call from both the SIGINT handler and the atexit hook.
+    """
+    global _cleanup_done
+    with _managed_lock:
+        if _cleanup_done:
+            return
+        _cleanup_done = True
+        to_cleanup = list(_managed_processes)
+        _managed_processes.clear()
+
+    if not to_cleanup:
+        return
+
+    # Phase 1: targeted pkill / SIGTERM
+    for entry in to_cleanup:
+        popen = entry["popen"]
+        selectors = entry["selectors"]
+
+        # Kill specific gzserver/gzclient PIDs we captured at launch.
+        # Done first so the roslaunch wrapper doesn't try to restart
+        # them as we kill it.
+        for pid in selectors.get("gazebo_pids", []) or []:
+            try:
+                os.kill(int(pid), signal.SIGTERM)
+            except (ProcessLookupError, PermissionError, ValueError):
+                pass
+
+        # Kill the wrapper Popen (xterm/shell). This may or may not
+        # propagate to the actual roscore depending on whether xterm
+        # detached from the parent session.
+        try:
+            if popen is not None and popen.poll() is None:
+                popen.terminate()
+        except Exception:
+            pass
+
+        # Targeted pkill by roscore port — uniquely identifies OUR
+        # roscore even if xterm detached.
+        port = selectors.get("roscore_port")
+        if port:
+            try:
+                subprocess.run(
+                    ["pkill", "-f", f"roscore -p {port}"],
+                    timeout=5,
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                )
+            except Exception:
+                pass
+
+    # Give children a moment to exit gracefully.
+    time.sleep(0.5)
+
+    # Phase 2: SIGKILL anything still alive.
+    for entry in to_cleanup:
+        popen = entry["popen"]
+        selectors = entry["selectors"]
+        try:
+            if popen is not None and popen.poll() is None:
+                popen.kill()
+        except Exception:
+            pass
+        for pid in selectors.get("gazebo_pids", []) or []:
+            try:
+                os.kill(int(pid), signal.SIGKILL)
+            except (ProcessLookupError, PermissionError, ValueError):
+                pass
 
 """
     01. launch_roscore: To launch a rocore with a given or random (no overlapping) port
@@ -181,9 +334,15 @@ def launch_roscore(port: int = None, set_new_master_vars: bool = True) -> Tuple[
     # launch roscore as a term command
     term_cmd = "roscore -p " + ros_port
     term_cmd = "xterm -e ' " + term_cmd + "'"
-    subprocess.Popen(term_cmd, shell=True)
+    roscore_proc = subprocess.Popen(term_cmd, shell=True)
     time.sleep(5.0)
     rospy.loginfo("Roscore launched! with port: " + ros_port)
+
+    # Register for Ctrl+C / atexit cleanup. The xterm wrapper may
+    # detach, so we also record the port so cleanup can issue a
+    # targeted ``pkill -f "roscore -p <port>"`` that is scoped to
+    # OUR roscore (the port is unique to this Python process).
+    register_managed_process(roscore_proc, roscore_port=ros_port, kind="roscore")
 
     # change the current ROS_MASTER anb the GAZEBO_MASTER to the selected one
     if set_new_master_vars:
