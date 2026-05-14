@@ -136,7 +136,7 @@ def launch_gazebo(launch_roscore: bool = True,
     # Select world
     if custom_world_path is not None:
         if os.path.exists(custom_world_path) is False:
-            print("Custom World file in " + custom_world_path + " does not exists!")
+            rospy.logerr("Custom World file in " + custom_world_path + " does not exist!")
             return None, None, None
         term_cmd += " world_name:=" + str(custom_world_path)
 
@@ -149,7 +149,7 @@ def launch_gazebo(launch_roscore: bool = True,
 
         world_file_path = world_pkg_path + "/worlds/" + custom_world_name
         if os.path.exists(world_file_path) is False:
-            print("Custom World file in " + world_file_path + " does not exists!")
+            rospy.logerr("Custom World file in " + world_file_path + " does not exist!")
             return None, None, None
         term_cmd += " world_name:=" + str(world_file_path)
 
