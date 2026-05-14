@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package format="2">
   <name>multiros</name>
-  <version>0.2.0</version>
+  <version>0.3.0</version>
   <description>MultiROS: ROS-Based Robot Simulation Environment for Concurrent Deep Reinforcement Learning</description>
 
   <author email="j.kapukotuwa@research.ait.ie">Jayasekara Kapukotuwa</author>
