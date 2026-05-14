@@ -6,6 +6,9 @@ setup_args = generate_distutils_setup(
     name="multiros",
     packages=['multiros'],
     package_dir={'': 'src'},
+    # PEP 561: ship the py.typed marker so type checkers (mypy /
+    # pyright) treat installed copies of the package as typed.
+    package_data={'multiros': ['py.typed']},
 
     description="MultiROS: ROS-Based Robot Simulation Environment for Concurrent Deep Reinforcement Learning",
     url="https://github.com/ncbdrck/multiros",
