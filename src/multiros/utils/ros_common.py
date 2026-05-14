@@ -254,22 +254,50 @@ def _port_is_free(port: int) -> bool:
         sock.close()
 
 
-def _reserve_free_port() -> int:
+# Track ports we've issued via _reserve_free_port within this Python
+# process. The kernel only guarantees port uniqueness while a socket is
+# bound — once we close() to read the port back, the kernel can re-issue
+# the same port to a subsequent bind(0). Keeping a per-process set lets
+# us detect that and pick a different port. Cross-process races aren't
+# covered (they're rare in practice because the kernel allocates
+# different ephemeral ranges per process under typical settings).
+_port_claims_lock = threading.Lock()
+_port_claims: set = set()
+
+
+def _reserve_free_port(_max_retries: int = 20) -> int:
     """
     Ask the kernel for a free ephemeral port via bind(0).
 
-    Returns the port number after closing the socket. There is a tiny
-    TOCTOU window between close and the caller's subsequent bind; this
-    is the standard trick used by pytest-xdist/portpicker and is far
-    safer than picking random integers and hoping.
+    Returns the port number after closing the socket. The kernel
+    guarantees the returned port is free *at this moment*; the
+    process-local set ``_port_claims`` ensures we never hand out the
+    same port twice within this Python process even if the kernel
+    re-issues it after the previous claimant's socket was closed.
+
+    There is still a tiny TOCTOU window between this function
+    returning and the caller's subsequent ``roscore -p <port>``
+    bind. Mitigation in production: roscore launches quickly after
+    the port is picked, well before the kernel would normally
+    rotate back to the same ephemeral port.
     """
-    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    try:
-        sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        sock.bind(('127.0.0.1', 0))
-        return sock.getsockname()[1]
-    finally:
-        sock.close()
+    for _ in range(_max_retries):
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        try:
+            sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            sock.bind(('127.0.0.1', 0))
+            port = sock.getsockname()[1]
+        finally:
+            sock.close()
+        with _port_claims_lock:
+            if port not in _port_claims:
+                _port_claims.add(port)
+                return port
+        # Otherwise the kernel re-issued a port we already claimed; loop.
+    raise RuntimeError(
+        f"Could not reserve a unique free port after {_max_retries} attempts; "
+        f"this typically means something is wrong with the ephemeral port pool."
+    )
 
 
 def _append_port_log(ros_port: str) -> None:
