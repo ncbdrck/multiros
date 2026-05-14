@@ -38,7 +38,7 @@
   <exec_depend>gazebo_ros</exec_depend>
   <exec_depend>sensor_msgs</exec_depend>
   <exec_depend>controller_manager_msgs</exec_depend>
-  <!-- Round 8.1: multiros.core re-exports uniros._proxy.GymProxy -->
+  <!-- multiros.core.MultirosGym is an alias for uniros._proxy.GymProxy. -->
   <exec_depend>uniros</exec_depend>
 
 

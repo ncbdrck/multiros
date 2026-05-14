@@ -51,9 +51,10 @@ from typing import Tuple, Union, List, Dict, Any
 _PORT_LOG_PATH = '/tmp/ros_master_ports_multiros.txt'
 
 # ----------------------------------------------------------------------
-# Managed-process registry: track roscore/Gazebo processes this Python
-# process spawned so we can clean them up on Ctrl+C or normal exit.
-# Scoped to processes WE launched, not host-wide — see Round 7.
+# Managed-process registry: track the roscore / Gazebo processes this
+# Python process spawned so they can be cleaned up on Ctrl+C or
+# normal exit. Scoped to processes the calling script started — the
+# host-wide ``kill_all_host_*`` helpers below are a separate tool.
 # ----------------------------------------------------------------------
 _managed_lock = threading.Lock()
 _managed_processes: List[Dict[str, Any]] = []
@@ -318,26 +319,24 @@ def _remove_from_port_log(ros_port: str) -> None:
 def launch_roscore(port: int = None, set_new_master_vars: bool = True) -> Tuple[str, str]:
     """
     Launch a roscore on a free port and (optionally) point this process's
-    ROS_MASTER_URI / GAZEBO_MASTER_URI at it.
+    ``ROS_MASTER_URI`` / ``GAZEBO_MASTER_URI`` at it.
 
-    The previous implementation tracked allocated ports in a shared
-    /tmp file. That had two problems: (1) a parallel process could
-    pick the same random port between our read and our write, and (2)
-    the file only knew about ports *we* picked — anything else on the
-    machine squatting on a port in the historical range was invisible
-    to us. We now ask the kernel for a free port via ``socket.bind(0)``;
-    the kernel is the authoritative source of truth and naturally
-    serializes between parallel callers.
+    Ports are allocated via ``socket.bind(('127.0.0.1', 0))`` so the
+    kernel picks free ports and serializes between parallel callers
+    on the same host — there's no shared file to race on, and
+    anything else squatting on a port in the historical range is
+    naturally avoided.
 
     Args:
-        port (int): A specific desired port for ROS_MASTER_URI. If the
-            port is unavailable on this host right now, we fall back to
-            a kernel-allocated free port and warn.
-        set_new_master_vars (bool): change the current ROS_MASTER and
-            GAZEBO_MASTER environment variables to the selected ones.
+        port (int): A specific desired port for ``ROS_MASTER_URI``.
+            If the port is unavailable on this host right now, falls
+            back to a kernel-allocated free port and logs a warning.
+        set_new_master_vars (bool): change the current
+            ``ROS_MASTER_URI`` and ``GAZEBO_MASTER_URI`` environment
+            variables to the selected ones.
 
     Returns:
-        Tuple[str, str]: (ros_port, gazebo_port) as strings.
+        Tuple[str, str]: ``(ros_port, gazebo_port)`` as strings.
     """
 
     # Try the caller's requested port first if specified and free.

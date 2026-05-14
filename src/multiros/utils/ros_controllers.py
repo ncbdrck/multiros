@@ -1,14 +1,16 @@
 #! /usr/bin/env python
 """
-Re-export of the canonical ROS-controller helpers.
+Re-export of the canonical ROS-controller helpers from
+:mod:`uniros.utils.ros_controllers`.
 
-The actual implementation lives in ``uniros.utils.ros_controllers``.
-Before Round 8.2 this file was byte-identical with the realros
-version. Both packages now import from UniROS so a fix lands in
-one place — including the Round 3.1 timeout fixes for every
-``rospy.wait_for_service`` call inside.
+Each helper wraps a ``controller_manager`` service call (load,
+unload, list, switch, start, stop, reset, spawn, unspawn) with a
+30-second ``rospy.wait_for_service`` timeout so a hung
+``controller_manager`` surfaces as a logged failure rather than an
+indefinite hang.
 
-Existing imports continue to work unchanged:
+Usage::
+
     from multiros.utils.ros_controllers import load_ros_controller, ...
 """
 

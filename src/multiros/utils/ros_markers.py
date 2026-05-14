@@ -1,13 +1,10 @@
 #! /usr/bin/env python
 """
-Re-export of the canonical ROS marker helpers.
+Re-export of the canonical ROS marker helpers from
+:mod:`uniros.utils.ros_markers`.
 
-The actual implementation lives in ``uniros.utils.ros_markers``.
-Before Round 8.2 this file was byte-identical with the realros
-version. Both packages now import from UniROS so a fix lands in
-one place.
+Usage::
 
-Existing imports continue to work unchanged:
     from multiros.utils.ros_markers import RosMarker, RosMarkerArray
 """
 
