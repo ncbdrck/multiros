@@ -42,7 +42,7 @@ import atexit
 import signal
 import threading
 import xacro
-from typing import Tuple, Union, List, Dict, Any
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 # Best-effort log of ports we've launched roscores on. Not load-bearing
 # for allocation correctness: the kernel decides what's free via
@@ -345,7 +345,7 @@ def _remove_from_port_log(ros_port: str) -> None:
         rospy.logwarn(f"Could not edit port log {_PORT_LOG_PATH}: {e}")
 
 
-def launch_roscore(port: int = None, set_new_master_vars: bool = True) -> Tuple[str, str]:
+def launch_roscore(port: Optional[int] = None, set_new_master_vars: bool = True) -> Tuple[str, str]:
     """
     Launch a roscore on a free port and (optionally) point this process's
     ``ROS_MASTER_URI`` / ``GAZEBO_MASTER_URI`` at it.
@@ -412,7 +412,7 @@ def launch_roscore(port: int = None, set_new_master_vars: bool = True) -> Tuple[
 """
 
 
-def change_ros_gazebo_master(ros_port: str, gazebo_port: str = None) -> bool:
+def change_ros_gazebo_master(ros_port: str, gazebo_port: Optional[str] = None) -> bool:
     """
     Function to set the current ROS and Gazebo Master Environment Variables.
     This is for situations where we need to spawn multiple gazebo instances
@@ -628,7 +628,7 @@ def kill_all_roslaunch_process() -> bool:
 """
 
 
-def kill_all_ros_nodes(ros_port=None, gazebo_port=None) -> bool:
+def kill_all_ros_nodes(ros_port: Optional[str] = None, gazebo_port: Optional[str] = None) -> bool:
     """
     Function to kill all running ROS nodes of the specified or current Rosmaster.
 
@@ -660,7 +660,7 @@ def kill_all_ros_nodes(ros_port=None, gazebo_port=None) -> bool:
 """
 
 
-def kill_ros_node(node_name, ros_port=None, gazebo_port=None) -> bool:
+def kill_ros_node(node_name: str, ros_port: Optional[str] = None, gazebo_port: Optional[str] = None) -> bool:
     """
     Function to kill a ROS node of the given or current Rosmaster.
 
@@ -693,7 +693,7 @@ def kill_ros_node(node_name, ros_port=None, gazebo_port=None) -> bool:
 """
 
 
-def ros_kill_master(ros_port) -> bool:
+def ros_kill_master(ros_port: str) -> bool:
     """
     Function to kill a ROS master.
 
@@ -767,7 +767,7 @@ def clean_ros_logs() -> bool:
 """
 
 
-def source_workspace(abs_path) -> bool:
+def source_workspace(abs_path: str) -> bool:
     """
     DEPRECATED no-op.
 
@@ -810,8 +810,13 @@ def source_workspace(abs_path) -> bool:
 """
 
 
-def ros_launch_launcher(pkg_name=None, launch_file_name=None, launch_file_abs_path=None, args=None,
-                        launch_new_term=True, ros_port=None, gazebo_port=None) -> bool:
+def ros_launch_launcher(pkg_name: Optional[str] = None,
+                        launch_file_name: Optional[str] = None,
+                        launch_file_abs_path: Optional[str] = None,
+                        args: Optional[List[str]] = None,
+                        launch_new_term: bool = True,
+                        ros_port: Optional[str] = None,
+                        gazebo_port: Optional[str] = None) -> bool:
     """
     Function to execute a roslaunch with args.
 
@@ -851,7 +856,9 @@ def ros_launch_launcher(pkg_name=None, launch_file_name=None, launch_file_abs_pa
 
 
 # helper fn for ros_launch_launcher
-def construct_roslaunch_command(pkg_name, launch_file_name, launch_file_abs_path):
+def construct_roslaunch_command(pkg_name: Optional[str],
+                                launch_file_name: Optional[str],
+                                launch_file_abs_path: Optional[str]) -> List[str]:
     """
     Constructs a roslaunch command using either a package name and launch file name or an absolute path to a launch file.
 
@@ -898,8 +905,15 @@ def construct_roslaunch_command(pkg_name, launch_file_name, launch_file_abs_path
 """
 
 
-def ros_node_launcher(pkg_name, node_name, launch_master=False, launch_new_term=True, name=None, ns="/", output="log",
-                      ros_port=None, gazebo_port=None, args=None) -> Tuple[str, str, bool]:
+def ros_node_launcher(pkg_name: str, node_name: str,
+                      launch_master: bool = False,
+                      launch_new_term: bool = True,
+                      name: Optional[str] = None,
+                      ns: str = "/",
+                      output: str = "log",
+                      ros_port: Optional[str] = None,
+                      gazebo_port: Optional[str] = None,
+                      args: Optional[List[str]] = None) -> Tuple[str, str, bool]:
     """
     Function to launch a ROS node from a package. If "launch_master" is "True", it will also launch a ROSCORE with the
     given "ros_port" or with a random ROS master port if "ros_port" is not specified.
@@ -965,7 +979,10 @@ def ros_node_launcher(pkg_name, node_name, launch_master=False, launch_new_term=
 
 
 # helper fn for ros_node_launcher
-def construct_rosrun_command(pkg_name, node_name, name=None, ns="/", output="log"):
+def construct_rosrun_command(pkg_name: str, node_name: str,
+                             name: Optional[str] = None,
+                             ns: str = "/",
+                             output: str = "log") -> List[str]:
     """
     Constructs a rosrun command using a package name and node name.
 
@@ -992,7 +1009,7 @@ def construct_rosrun_command(pkg_name, node_name, name=None, ns="/", output="log
 
 
 # # helper fn for ros_node_launcher
-def check_package_exists(pkg_name):
+def check_package_exists(pkg_name: str) -> bool:
     """
     Checks if a given package exists.
 
@@ -1018,7 +1035,12 @@ def check_package_exists(pkg_name):
 """
 
 
-def ros_load_yaml(pkg_name=None, file_name=None, file_abs_path=None, ns='/', ros_port=None, gazebo_port=None) -> bool:
+def ros_load_yaml(pkg_name: Optional[str] = None,
+                  file_name: Optional[str] = None,
+                  file_abs_path: Optional[str] = None,
+                  ns: str = '/',
+                  ros_port: Optional[str] = None,
+                  gazebo_port: Optional[str] = None) -> bool:
     """
     Fetch a YAML file from a package or an abs path and load it into the ROS Parameter Server.
 
@@ -1078,8 +1100,15 @@ def ros_load_yaml(pkg_name=None, file_name=None, file_abs_path=None, ns='/', ros
 """
 
 
-def load_urdf(model_path=None, pkg_name=None, file_name=None, folder="/urdf", ns=None, args_xacro=None,
-              param_name=None, ros_port=None, gazebo_port=None) -> Tuple[bool, Union[str, None]]:
+def load_urdf(model_path: Optional[str] = None,
+              pkg_name: Optional[str] = None,
+              file_name: Optional[str] = None,
+              folder: str = "/urdf",
+              ns: Optional[str] = None,
+              args_xacro: Optional[List[str]] = None,
+              param_name: Optional[str] = None,
+              ros_port: Optional[str] = None,
+              gazebo_port: Optional[str] = None) -> Tuple[bool, Optional[str]]:
     """
     Function to load a URDF from a ROS package to the parameter server or a string containing the processed URDF data.
 
