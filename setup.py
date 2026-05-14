@@ -6,7 +6,6 @@ setup_args = generate_distutils_setup(
     name="multiros",
     packages=['multiros'],
     package_dir={'': 'src'},
-    version='1.0.0',
 
     description="MultiROS: ROS-Based Robot Simulation Environment for Concurrent Deep Reinforcement Learning",
     url="https://github.com/ncbdrck/multiros",
