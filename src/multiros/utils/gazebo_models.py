@@ -1,17 +1,20 @@
 #! /usr/bin/env python
 
 """
-This script is to specify all the common functions related to the handling of models in Gazebo.
-It has the following functions,
-   01. gazebo_spawn_urdf: Spwan a URDF model in Gazebo
-   02. spawn_model_in_gazebo: Spawn a model from an SDF file in Gazebo
-   03. spawn_sdf_model_gazebo: Spawn an SDF model in Gazebo. (Recommended)
-   04. spawn_robot_in_gazebo: Spawn a robot in Gazebo.
-   05. gazebo_get_world_properties: Get properties of the Gazebo world. (spawned model names)
-   06. gazebo_delete_model: Delete a model from Gazebo
-   07. remove_model_gazebo: Delete a model from Gazebo. (Recommended)
-   08. gazebo_get_model_state: Get the state of a model in Gazebo (Header, Pose, Twist)
-   09. gazebo_set_model_state: Set the state of a model in Gazebo.
+Common functions for handling models in Gazebo.
+
+Functions provided:
+
+- ``gazebo_spawn_urdf`` — spawn a URDF model in Gazebo.
+- ``spawn_model_in_gazebo`` — spawn a model from an SDF file in Gazebo.
+- ``spawn_sdf_model_gazebo`` — spawn an SDF model in Gazebo (recommended).
+- ``spawn_robot_in_gazebo`` — spawn a robot in Gazebo.
+- ``gazebo_get_world_properties`` — get properties of the Gazebo world
+  (spawned model names).
+- ``gazebo_delete_model`` — delete a model from Gazebo.
+- ``remove_model_gazebo`` — delete a model from Gazebo (recommended).
+- ``gazebo_get_model_state`` — get the state of a model (Header, Pose, Twist).
+- ``gazebo_set_model_state`` — set the state of a model.
 """
 
 import rospy

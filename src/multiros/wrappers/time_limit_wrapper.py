@@ -46,13 +46,14 @@ class TimeLimitWrapper(gym.Wrapper, gym.utils.RecordConstructorArgs):
         return observation, reward, terminated, truncated, info
 
     def reset(self, **kwargs):
-        """Resets the environment with :param:`**kwargs` and sets the number of steps elapsed to zero.
+        """Reset the environment and zero the elapsed-step counter.
 
         Args:
-            **kwargs: The kwargs to reset the environment with
+            **kwargs: forwarded to the wrapped environment's ``reset``.
 
         Returns:
-            The reset environment
+            The reset environment's initial observation (and info, on
+            Gymnasium API envs).
         """
         self._elapsed_steps = 0
         return self.env.reset(**kwargs)

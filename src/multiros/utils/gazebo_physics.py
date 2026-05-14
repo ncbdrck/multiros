@@ -1,23 +1,27 @@
 #! /usr/bin/env python
 
 """
-This script is to specify all the common functions related to the handling physics of Gazebo Simulator.
-It has the following functions,
-  01. get_gazebo_physics_properties: Get the current physics properties of Gazebo.
-  02. set_gazebo_physics_properties: Set the physics properties of Gazebo.
-  03. get_gazebo_max_update_rate: Get the current maximum update rate for Gazebo.
-  04. set_gazebo_max_update_rate: Set the maximum update rate for Gazebo in a real-time factor.
-  05. get_gazebo_time_step: Get the current time step for Gazebo.
-  06. set_gazebo_time_step: Set the time step for Gazebo.
-  07. get_gazebo_gravity: Get the current gravity vector for Gazebo.
-  08. set_gazebo_gravity: Set the gravity vector for Gazebo.
-  09. get_gazebo_ode_physics: Get the current ODE physics properties of Gazebo.
-  10. set_gazebo_ode_physics: Set the ODE physics properties of Gazebo.
+Common functions for handling the physics of the Gazebo simulator.
 
-  ROS Docs:
-  http://docs.ros.org/en/diamondback/api/gazebo/html/srv/GetPhysicsProperties.html
-  http://docs.ros.org/en/diamondback/api/gazebo/html/srv/SetPhysicsProperties.html
-  http://docs.ros.org/en/diamondback/api/gazebo/html/msg/ODEPhysics.html
+Functions provided:
+
+- ``get_gazebo_physics_properties`` — get the current physics properties.
+- ``set_gazebo_physics_properties`` — set the physics properties.
+- ``get_gazebo_max_update_rate`` — get the current maximum update rate.
+- ``set_gazebo_max_update_rate`` — set the maximum update rate as a
+  real-time factor.
+- ``get_gazebo_time_step`` — get the current time step.
+- ``set_gazebo_time_step`` — set the time step.
+- ``get_gazebo_gravity`` — get the current gravity vector.
+- ``set_gazebo_gravity`` — set the gravity vector.
+- ``get_gazebo_ode_physics`` — get the current ODE physics properties.
+- ``set_gazebo_ode_physics`` — set the ODE physics properties.
+
+ROS service references:
+
+- http://docs.ros.org/en/diamondback/api/gazebo/html/srv/GetPhysicsProperties.html
+- http://docs.ros.org/en/diamondback/api/gazebo/html/srv/SetPhysicsProperties.html
+- http://docs.ros.org/en/diamondback/api/gazebo/html/msg/ODEPhysics.html
 """
 
 import rospy
