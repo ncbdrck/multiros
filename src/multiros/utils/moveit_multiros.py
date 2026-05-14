@@ -32,7 +32,7 @@ import sys
 import moveit_commander
 import rospy
 from multiros.utils import gazebo_core
-from typing import List, Union
+from typing import List, Optional, Union
 import numpy as np
 from geometry_msgs.msg import Pose
 from geometry_msgs.msg import PoseStamped
@@ -254,19 +254,19 @@ class MoveitMultiros(object):
 
         return result
 
-    def stop_arm(self):
+    def stop_arm(self) -> None:
         """
         Stop the robot arm from moving.
         """
         self.robot_arm.stop()
 
-    def stop_gripper(self):
+    def stop_gripper(self) -> None:
         """
         Stop the gripper from moving.
         """
         self.gripper.stop()
 
-    def robot_pose(self):
+    def robot_pose(self) -> PoseStamped:
         """
         Get the current pose of the robot arm.
 
@@ -284,7 +284,7 @@ class MoveitMultiros(object):
         """
         return self.robot_arm.get_current_rpy()
 
-    def gripper_pose(self, gripper_link: str = ""):
+    def gripper_pose(self, gripper_link: str = "") -> PoseStamped:
         """
         Get the current pose of the gripper.
 
@@ -397,7 +397,8 @@ class MoveitMultiros(object):
     """
 
     def set_trajectory_ee(self, position: Union[List[float], np.ndarray],
-                          orientation: Union[List[float], np.ndarray] = None, async_move: bool = False) -> bool:
+                          orientation: Optional[Union[List[float], np.ndarray]] = None,
+                          async_move: bool = False) -> bool:
         """
         Set a pose target for the end effector of the robot arm.
 
@@ -641,7 +642,7 @@ class MoveitMultiros(object):
             gazebo_core.pause_gazebo()
         return random_pose
 
-    def set_planning_time(self, planning_time: float):
+    def set_planning_time(self, planning_time: float) -> None:
         """
         Set the maximum allowed planning time. Specify the amount of time to be used for motion planning
 
@@ -650,7 +651,7 @@ class MoveitMultiros(object):
         """
         self.robot_arm.set_planning_time(planning_time)
 
-    def set_goal_position_tolerance(self, position_tolerance: float):
+    def set_goal_position_tolerance(self, position_tolerance: float) -> None:
         """
         Set the tolerance for a target end-effector position
 
@@ -659,7 +660,7 @@ class MoveitMultiros(object):
         """
         self.robot_arm.set_goal_position_tolerance(position_tolerance)
 
-    def set_goal_orientation_tolerance(self, orientation_tolerance: float):
+    def set_goal_orientation_tolerance(self, orientation_tolerance: float) -> None:
         """
         Set the tolerance for a target end-effector orientation.
 
@@ -668,7 +669,7 @@ class MoveitMultiros(object):
         """
         self.robot_arm.set_goal_orientation_tolerance(orientation_tolerance)
 
-    def set_goal_joint_tolerance(self, joint_tolerance: float):
+    def set_goal_joint_tolerance(self, joint_tolerance: float) -> None:
         """
         Set the tolerance for a target joint configuration.
 
@@ -677,7 +678,7 @@ class MoveitMultiros(object):
         """
         self.robot_arm.set_goal_joint_tolerance(joint_tolerance)
 
-    def set_max_acceleration_scaling_factor(self, acceleration_scaling_factor: float):
+    def set_max_acceleration_scaling_factor(self, acceleration_scaling_factor: float) -> None:
         """
         Set a scaling factor to reduce the maximum joint accelerations. Allowed values are in (0,1].
         The default value is set in the joint_limits.yaml of the moveit_config package.
@@ -687,7 +688,7 @@ class MoveitMultiros(object):
         """
         self.robot_arm.set_max_acceleration_scaling_factor(acceleration_scaling_factor)
 
-    def set_max_velocity_scaling_factor(self, velocity_scaling_factor: float):
+    def set_max_velocity_scaling_factor(self, velocity_scaling_factor: float) -> None:
         """
         Set a scaling factor to reduce the maximum joint velocities. Allowed values are in (0,1].
         The default value is set in the joint_limits.yaml of the moveit_config package.

@@ -113,11 +113,22 @@ Please note that the instructions assume you are using Ubuntu 20.04 and ROS Noet
 
 ## Installation
 
+> **Required dependency:** Starting with v0.2.0, MultiROS shares its
+> multiprocessing proxy and ROS utility modules with the
+> [UniROS](https://github.com/ncbdrck/UniROS) package
+> (`multiros.core.MultirosGym` is an alias for `uniros._proxy.GymProxy`,
+> and `multiros.utils.ros_markers` re-exports from
+> `uniros.utils.ros_markers`). **You must clone UniROS into the same
+> catkin workspace.** A standalone clone of MultiROS will fail at
+> import time with `ModuleNotFoundError: No module named 'uniros'`.
+
 To get started with MultiROS, follow these steps:
 
-1. Clone the repository:
+1. Clone UniROS (provides the shared `uniros` runtime) and MultiROS into
+   the same catkin workspace:
     ```shell
     cd ~/catkin_ws/src
+    git clone -b gymnasium https://github.com/ncbdrck/UniROS.git
     git clone -b gymnasium https://github.com/ncbdrck/multiros.git
     ```
 

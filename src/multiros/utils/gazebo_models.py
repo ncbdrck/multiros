@@ -31,7 +31,7 @@ from std_msgs.msg import Header
 from geometry_msgs.msg import Pose, Point, Quaternion, Twist
 
 from multiros.utils import ros_common, ros_controllers, gazebo_core
-from typing import Tuple, List
+from typing import List, Optional, Tuple
 
 
 def gazebo_spawn_urdf(model_string=None, param_name=None, model_name="robot_0", robot_namespace="/",
@@ -196,12 +196,17 @@ def spawn_model_in_gazebo(model_path=None, pkg_name=None, file_name=None, model_
         return False
 
 
-def spawn_sdf_model_gazebo(model_path: str = None, pkg_name: str = None, file_name: str = None,
+def spawn_sdf_model_gazebo(model_path: Optional[str] = None,
+                           pkg_name: Optional[str] = None,
+                           file_name: Optional[str] = None,
                            model_folder: str = "/model", model_name: str = "model_0",
                            namespace: str = "/", reference_frame: str = "world",
                            pos_x: float = 0.0, pos_y: float = 0.0, pos_z: float = 0.0,
                            ori_x: float = 0.0, ori_y: float = 0.0, ori_z: float = 0.0, ori_w: float = 1.0,
-                           ros_port=None, gazebo_port=None, max_tries: int = 5, pause_unpause=True) -> bool:
+                           ros_port: Optional[str] = None,
+                           gazebo_port: Optional[str] = None,
+                           max_tries: int = 5,
+                           pause_unpause: bool = True) -> bool:
     """
     Function to spawn an SDF model in Gazebo. This function make sure that model was spawned.
 
@@ -267,13 +272,17 @@ def spawn_sdf_model_gazebo(model_path: str = None, pkg_name: str = None, file_na
 
 
 def spawn_robot_in_gazebo(pkg_name: str, model_urdf_file: str, model_urdf_folder: str = "/urdf", ns: str = "/",
-                          args_xacro: list = None, pub_freq: float = None, rob_st_term: bool = False,
+                          args_xacro: Optional[List[str]] = None,
+                          pub_freq: Optional[float] = None,
+                          rob_st_term: bool = False,
                           gazebo_name: str = "robot", gz_ref_frame: str = "world",
                           pos_x: float = 0.0, pos_y: float = 0.0, pos_z: float = 0.0,
                           ori_w: float = 1.0, ori_x: float = 0.0, ori_y: float = 0.0, ori_z: float = 0.0,
-                          controllers_file: str = None, controllers_list: list = None,
-                          ros_port: str = None, gazebo_port: str = None,
-                          controller_package_name: str = None
+                          controllers_file: Optional[str] = None,
+                          controllers_list: Optional[List[str]] = None,
+                          ros_port: Optional[str] = None,
+                          gazebo_port: Optional[str] = None,
+                          controller_package_name: Optional[str] = None
                           ) -> bool:
     """
     Function to spawn a robot in Gazebo.
@@ -391,7 +400,7 @@ def spawn_robot_in_gazebo(pkg_name: str, model_urdf_file: str, model_urdf_folder
     return True
 
 
-def gazebo_get_world_properties(ros_port=None, gazebo_port=None) -> Tuple[bool, float, List[str]]:
+def gazebo_get_world_properties(ros_port: Optional[str] = None, gazebo_port: Optional[str] = None) -> Tuple[bool, float, List[str]]:
     """
     Function to get properties of the Gazebo world.
 
@@ -425,7 +434,7 @@ def gazebo_get_world_properties(ros_port=None, gazebo_port=None) -> Tuple[bool, 
     return world_specs.success, world_specs.sim_time, world_specs.model_names
 
 
-def gazebo_delete_model(model_name: str, ros_port=None, gazebo_port=None) -> Tuple[bool, str]:
+def gazebo_delete_model(model_name: str, ros_port: Optional[str] = None, gazebo_port: Optional[str] = None) -> Tuple[bool, str]:
     """
     Function to delete a model from Gazebo.
 
@@ -459,8 +468,9 @@ def gazebo_delete_model(model_name: str, ros_port=None, gazebo_port=None) -> Tup
     return result.success
 
 
-def remove_model_gazebo(model_name: str, max_tries: int = 5, ros_port=None, gazebo_port=None,
-                        pause_unpause=True) -> bool:
+def remove_model_gazebo(model_name: str, max_tries: int = 5,
+                        ros_port: Optional[str] = None, gazebo_port: Optional[str] = None,
+                        pause_unpause: bool = True) -> bool:
     """
     Function to make sure if a model is deleted from Gazebo.
 
@@ -508,7 +518,7 @@ def remove_model_gazebo(model_name: str, max_tries: int = 5, ros_port=None, gaze
 
 
 def gazebo_get_model_state(model_name: str, relative_entity_name: str = 'world',
-                           ros_port=None, gazebo_port=None) -> Tuple[Header, Pose, Twist, bool]:
+                           ros_port: Optional[str] = None, gazebo_port: Optional[str] = None) -> Tuple[Header, Pose, Twist, bool]:
     """
     Function to get the state of a model in Gazebo.
 
@@ -551,7 +561,8 @@ def gazebo_set_model_state(model_name: str, reference_frame: str = "world",
                            lin_vel_x: float = 0.0, lin_vel_y: float = 0.0, lin_vel_z: float = 0.0,
                            ang_vel_x: float = 0.0, ang_vel_y: float = 0.0, ang_vel_z: float = 0.0,
                            sleep_time: float = 0.05,
-                           ros_port=None, gazebo_port=None) -> bool:
+                           ros_port: Optional[str] = None,
+                           gazebo_port: Optional[str] = None) -> bool:
     """
     Function to set the state of a model in Gazebo.
 

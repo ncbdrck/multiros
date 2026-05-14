@@ -7,7 +7,7 @@ from multiros.utils import gazebo_models
 from multiros.utils import gazebo_physics
 from multiros.utils import ros_common
 from multiros.utils import ros_controllers
-from typing import Optional, List, Any, Dict
+from typing import Any, Dict, List, Mapping, Optional, Tuple
 
 
 class GazeboBaseEnv(gym.Env):
@@ -172,7 +172,7 @@ class GazeboBaseEnv(gym.Env):
 
         rospy.loginfo(self.CYAN + "End init GazeboBaseEnv" + self.ENDC)
 
-    def step(self, action):
+    def step(self, action: Any) -> Tuple[Any, float, bool, bool, Dict[str, Any]]:
         """
         Take a step in the environment.
 
@@ -226,7 +226,9 @@ class GazeboBaseEnv(gym.Env):
 
         return self.observation, self.reward, self.terminated, self.truncated, self.info
 
-    def reset(self, seed: Optional[int] = None, options: Optional[Dict[str, Any]] = None):
+    def reset(self, seed: Optional[int] = None,
+              options: Optional[Mapping[str, Any]] = None,
+              ) -> Tuple[Any, Dict[str, Any]]:
 
         """
         Reset the environment.
@@ -273,7 +275,7 @@ class GazeboBaseEnv(gym.Env):
 
         return self.observation, self.info
 
-    def close(self):
+    def close(self) -> None:
         """
         Close the environment.
         """

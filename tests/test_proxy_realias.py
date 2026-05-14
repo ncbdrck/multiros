@@ -1,7 +1,7 @@
 """
-Round 8.1 regression: multiros.core.MultirosGym must be the same
-class object as uniros._proxy.GymProxy, so a fix landed in UniROS
-also lands in multiros.
+Regression: multiros.core.MultirosGym must be the same class object
+as uniros._proxy.GymProxy, so any fix landed in UniROS also lands
+in multiros.
 """
 from multiros.core import MultirosGym
 from uniros._proxy import GymProxy

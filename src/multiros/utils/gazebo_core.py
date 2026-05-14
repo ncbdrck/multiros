@@ -24,7 +24,7 @@ import os
 import subprocess
 import time
 from std_srvs.srv import Empty
-from typing import Tuple
+from typing import List, Optional, Tuple
 from multiros.utils import ros_common
 
 """
@@ -32,11 +32,25 @@ from multiros.utils import ros_common
 """
 
 
-def launch_gazebo(launch_roscore=True, port=None, paused=False, use_sim_time=True, extra_gazebo_args=None, gui=False,
-                  recording=False, debug=False, physics="ode", verbose=False, output='screen', respawn_gazebo=False,
-                  pub_clock_frequency=100, server_required=False, gui_required=False, custom_world_path=None,
-                  custom_world_pkg=None, custom_world_name=None,
-                  launch_new_term=True) -> Tuple[str, str, subprocess.Popen]:
+def launch_gazebo(launch_roscore: bool = True,
+                  port: Optional[int] = None,
+                  paused: bool = False,
+                  use_sim_time: bool = True,
+                  extra_gazebo_args: Optional[str] = None,
+                  gui: bool = False,
+                  recording: bool = False,
+                  debug: bool = False,
+                  physics: str = "ode",
+                  verbose: bool = False,
+                  output: str = 'screen',
+                  respawn_gazebo: bool = False,
+                  pub_clock_frequency: int = 100,
+                  server_required: bool = False,
+                  gui_required: bool = False,
+                  custom_world_path: Optional[str] = None,
+                  custom_world_pkg: Optional[str] = None,
+                  custom_world_name: Optional[str] = None,
+                  launch_new_term: bool = True) -> Tuple[str, str, subprocess.Popen]:
     """
         Launch Gazebo using the ROS.
         All the available options when launching gazebo with ros can be found in the
@@ -122,7 +136,7 @@ def launch_gazebo(launch_roscore=True, port=None, paused=False, use_sim_time=Tru
     # Select world
     if custom_world_path is not None:
         if os.path.exists(custom_world_path) is False:
-            print("Custom World file in " + custom_world_path + " does not exists!")
+            rospy.logerr("Custom World file in " + custom_world_path + " does not exist!")
             return None, None, None
         term_cmd += " world_name:=" + str(custom_world_path)
 
@@ -135,7 +149,7 @@ def launch_gazebo(launch_roscore=True, port=None, paused=False, use_sim_time=Tru
 
         world_file_path = world_pkg_path + "/worlds/" + custom_world_name
         if os.path.exists(world_file_path) is False:
-            print("Custom World file in " + world_file_path + " does not exists!")
+            rospy.logerr("Custom World file in " + world_file_path + " does not exist!")
             return None, None, None
         term_cmd += " world_name:=" + str(world_file_path)
 
@@ -209,7 +223,7 @@ def _gazebo_pids() -> set:
 """
 
 
-def close_gazebo(process: subprocess.Popen, ros_port=None, gazebo_port=None) -> bool:
+def close_gazebo(process: subprocess.Popen, ros_port: Optional[str] = None, gazebo_port: Optional[str] = None) -> bool:
     """
     Function to close a gazebo instance. This function is to close both gzclient and the gzserver
 
@@ -238,8 +252,8 @@ def close_gazebo(process: subprocess.Popen, ros_port=None, gazebo_port=None) -> 
 """
 
 
-def reset_gazebo(reset_type: str = "simulation", max_tries: int = 5, ros_port: str = None,
-                 gazebo_port: str = None) -> bool:
+def reset_gazebo(reset_type: str = "simulation", max_tries: int = 5, ros_port: Optional[str] = None,
+                 gazebo_port: Optional[str] = None) -> bool:
     """
     Function to reset the Gazebo simulation or world.
 
@@ -290,7 +304,7 @@ def reset_gazebo(reset_type: str = "simulation", max_tries: int = 5, ros_port: s
 """
 
 
-def pause_gazebo(max_tries: int = 5, ros_port: str = None, gazebo_port: str = None) -> bool:
+def pause_gazebo(max_tries: int = 5, ros_port: Optional[str] = None, gazebo_port: Optional[str] = None) -> bool:
     """
     Function to pause the Gazebo simulation.
 
@@ -336,7 +350,7 @@ def pause_gazebo(max_tries: int = 5, ros_port: str = None, gazebo_port: str = No
 """
 
 
-def unpause_gazebo(max_tries: int = 5, ros_port: str = None, gazebo_port: str = None) -> bool:
+def unpause_gazebo(max_tries: int = 5, ros_port: Optional[str] = None, gazebo_port: Optional[str] = None) -> bool:
     """
     Function to unpause the Gazebo simulation.
 
@@ -377,7 +391,7 @@ def unpause_gazebo(max_tries: int = 5, ros_port: str = None, gazebo_port: str = 
     return False
 
 
-def gazebo_step(steps: int, ros_port: str = None, gazebo_port: str = None) -> bool:
+def gazebo_step(steps: int, ros_port: Optional[str] = None, gazebo_port: Optional[str] = None) -> bool:
     """
     Function to Step gazebo simulation multiple iteration.
 

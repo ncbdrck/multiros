@@ -28,10 +28,10 @@ import rospy
 from gazebo_msgs.srv import GetPhysicsProperties, SetPhysicsProperties, SetPhysicsPropertiesRequest
 from gazebo_msgs.msg import ODEPhysics
 from multiros.utils import ros_common
-from typing import List
+from typing import Any, List, Optional, Tuple
 
 
-def get_gazebo_physics_properties(ros_port: str = None, gazebo_port: str = None):
+def get_gazebo_physics_properties(ros_port: Optional[str] = None, gazebo_port: Optional[str] = None):
     """
     Function to get the current physics properties of Gazebo.
 
@@ -68,8 +68,12 @@ def get_gazebo_physics_properties(ros_port: str = None, gazebo_port: str = None)
         return None
 
 
-def set_gazebo_physics_properties(time_step: float = None, max_update_rate: float = None, gravity: list = None,
-                                  ode_config: ODEPhysics = None, ros_port: str = None, gazebo_port: str = None) -> bool:
+def set_gazebo_physics_properties(time_step: Optional[float] = None,
+                                  max_update_rate: Optional[float] = None,
+                                  gravity: Optional[List[float]] = None,
+                                  ode_config: Optional[ODEPhysics] = None,
+                                  ros_port: Optional[str] = None,
+                                  gazebo_port: Optional[str] = None) -> bool:
     """
     Function to set the physics properties of Gazebo.
 
@@ -119,7 +123,7 @@ def set_gazebo_physics_properties(time_step: float = None, max_update_rate: floa
         return False
 
 
-def get_gazebo_max_update_rate(ros_port: str = None, gazebo_port: str = None) -> float:
+def get_gazebo_max_update_rate(ros_port: Optional[str] = None, gazebo_port: Optional[str] = None) -> float:
     """
     Function to get the current maximum update rate for Gazebo.
 
@@ -142,7 +146,7 @@ def get_gazebo_max_update_rate(ros_port: str = None, gazebo_port: str = None) ->
     return physics_properties.max_update_rate
 
 
-def set_gazebo_max_update_rate(real_time_factor: float, ros_port: str = None, gazebo_port: str = None) -> bool:
+def set_gazebo_max_update_rate(real_time_factor: float, ros_port: Optional[str] = None, gazebo_port: Optional[str] = None) -> bool:
     """
     Function to set the maximum update rate for Gazebo in real-time factor.
     1 is real time, n is n times the rate of real time.
@@ -193,7 +197,7 @@ def set_gazebo_max_update_rate(real_time_factor: float, ros_port: str = None, ga
         return False
 
 
-def get_gazebo_time_step(ros_port: str = None, gazebo_port: str = None) -> float:
+def get_gazebo_time_step(ros_port: Optional[str] = None, gazebo_port: Optional[str] = None) -> float:
     """
     Function to get the current time step for Gazebo.
 
@@ -216,7 +220,7 @@ def get_gazebo_time_step(ros_port: str = None, gazebo_port: str = None) -> float
     return physics_properties.time_step
 
 
-def set_gazebo_time_step(time_step: float, ros_port: str = None, gazebo_port: str = None) -> bool:
+def set_gazebo_time_step(time_step: float, ros_port: Optional[str] = None, gazebo_port: Optional[str] = None) -> bool:
     """
     Function to set the time step for Gazebo.
 
@@ -263,7 +267,7 @@ def set_gazebo_time_step(time_step: float, ros_port: str = None, gazebo_port: st
         return False
 
 
-def get_gazebo_gravity(ros_port: str = None, gazebo_port: str = None) -> List[float]:
+def get_gazebo_gravity(ros_port: Optional[str] = None, gazebo_port: Optional[str] = None) -> List[float]:
     """
     Function to get the current gravity vector for Gazebo.
 
@@ -286,7 +290,7 @@ def get_gazebo_gravity(ros_port: str = None, gazebo_port: str = None) -> List[fl
     return physics_properties.gravity
 
 
-def set_gazebo_gravity(gravity: List[float], ros_port: str = None, gazebo_port: str = None) -> bool:
+def set_gazebo_gravity(gravity: List[float], ros_port: Optional[str] = None, gazebo_port: Optional[str] = None) -> bool:
     """
     Function to set the gravity vector for Gazebo.
 
@@ -333,7 +337,7 @@ def set_gazebo_gravity(gravity: List[float], ros_port: str = None, gazebo_port: 
         return False
 
 
-def get_gazebo_ode_physics(ros_port: str = None, gazebo_port: str = None):
+def get_gazebo_ode_physics(ros_port: Optional[str] = None, gazebo_port: Optional[str] = None):
     """
     Function to get the current ODE physics properties of Gazebo.
 
@@ -355,7 +359,7 @@ def get_gazebo_ode_physics(ros_port: str = None, gazebo_port: str = None):
     return physics_properties.ode_config
 
 
-def set_gazebo_ode_physics(ode_config: ODEPhysics, ros_port: str = None, gazebo_port: str = None) -> bool:
+def set_gazebo_ode_physics(ode_config: ODEPhysics, ros_port: Optional[str] = None, gazebo_port: Optional[str] = None) -> bool:
     """
     Function to set the ODE physics properties of Gazebo.
 

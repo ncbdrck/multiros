@@ -1,5 +1,5 @@
 """
-Round 7 regression: kill_all_ros_and_gazebo + kill_all_roslaunch_process
+Regression: kill_all_ros_and_gazebo + kill_all_roslaunch_process
 were renamed to kill_all_HOST_ros_and_gazebo / kill_all_HOST_roslaunch_processes
 to make their host-wide ``killall -9`` scope explicit. The old names
 remain as DeprecationWarning-emitting aliases.

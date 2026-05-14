@@ -1,6 +1,7 @@
 from copy import deepcopy
+from typing import Any, Dict, Optional, Tuple
+
 import gymnasium as gym
-from typing import Optional, Union
 
 from gymnasium.envs.registration import EnvSpec
 
@@ -11,7 +12,7 @@ class TimeLimitWrapper(gym.Wrapper, gym.utils.RecordConstructorArgs):
     Critically, this is different from the `terminated` signal that originates from the underlying environment as part of the MDP.
     """
 
-    def __init__(self, env: gym.Env, max_episode_steps: int):
+    def __init__(self, env: gym.Env, max_episode_steps: int) -> None:
         """Initializes the :class:`TimeLimitWrapper` with an environment and the number of steps after which truncation will occur.
 
         Args:
@@ -24,7 +25,7 @@ class TimeLimitWrapper(gym.Wrapper, gym.utils.RecordConstructorArgs):
         self._max_episode_steps = max_episode_steps
         self._elapsed_steps = 0
 
-    def step(self, action):
+    def step(self, action: Any) -> Tuple[Any, float, bool, bool, Dict[str, Any]]:
         """Steps through the environment and if the number of steps elapsed exceeds ``max_episode_steps`` then truncate.
 
         Args:
@@ -45,7 +46,7 @@ class TimeLimitWrapper(gym.Wrapper, gym.utils.RecordConstructorArgs):
 
         return observation, reward, terminated, truncated, info
 
-    def reset(self, **kwargs):
+    def reset(self, **kwargs: Any) -> Tuple[Any, Dict[str, Any]]:
         """Reset the environment and zero the elapsed-step counter.
 
         Args:
@@ -73,7 +74,7 @@ class TimeLimitWrapper(gym.Wrapper, gym.utils.RecordConstructorArgs):
         return self._cached_spec
 
 # Usage of the public API to get max_episode_steps
-def get_env_params(env):
-    params = {}
+def get_env_params(env: gym.Env) -> Dict[str, int]:
+    params: Dict[str, int] = {}
     params['max_timesteps'] = env.spec.max_episode_steps if env.spec else env._max_episode_steps
     return params
