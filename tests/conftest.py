@@ -204,6 +204,14 @@ _force_stub("hrl_geom", {})
 _force_stub("hrl_geom.pose_converter", {
     "PoseConv": type("PoseConv", (), {}),
 })
+# trac_ik_python is installed via apt (ros-noetic-trac-ik) on the
+# developer's machine but isn't a pip package, so it's missing on
+# GitHub Actions runners. uniros.utils.ros_kinematics imports it at
+# module load.
+_force_stub("trac_ik_python", {})
+_force_stub("trac_ik_python.trac_ik", {
+    "IK": type("IK", (), {}),
+})
 
 
 # --- fixtures -------------------------------------------------------------

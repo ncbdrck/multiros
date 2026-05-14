@@ -48,7 +48,8 @@ jobs:
           # build subprocess can see them. Without this, pip creates a clean
           # build sandbox and catkin_pkg is invisible there.
           pip install setuptools wheel catkin_pkg pytest
-          pip install gymnasium gymnasium_robotics numpy
+          # Pin gymnasium to match the supported runtime.
+          pip install "gymnasium==0.29.1" "gymnasium_robotics==1.2.4" numpy
           # Install UniROS first (multiros depends on it).
           pip install -e UniROS/uniros --no-build-isolation
           pip install -e multiros --no-build-isolation
