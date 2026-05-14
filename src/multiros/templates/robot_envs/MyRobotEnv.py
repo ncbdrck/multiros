@@ -40,8 +40,12 @@ class MyRobotEnv(GazeboBaseEnv.GazeboBaseEnv):
     Superclass for all Robot environments.
     """
 
-    def __init__(self, ros_port: str = None, gazebo_port: str = None, gazebo_pid=None, seed: int = None,
-                 real_time: bool = False, action_cycle_time=0.0):
+    def __init__(self, ros_port: Optional[str] = None,
+                 gazebo_port: Optional[str] = None,
+                 gazebo_pid: Optional[Any] = None,
+                 seed: Optional[int] = None,
+                 real_time: bool = False,
+                 action_cycle_time: float = 0.0) -> None:
         """
         Initializes a new Robot Environment
 
@@ -273,7 +277,7 @@ class MyRobotEnv(GazeboBaseEnv.GazeboBaseEnv):
     # ---------------------------------------------------
     #   Methods to override in Custom Robot Environment
 
-    def _check_connection_and_readiness(self):
+    def _check_connection_and_readiness(self) -> bool:
         """
         Function to check the connection status of subscribers, publishers and services, as well as the readiness of
         all systems.
@@ -283,7 +287,7 @@ class MyRobotEnv(GazeboBaseEnv.GazeboBaseEnv):
     # ---------------------------------------------------
     #    Methods to override in Custom Task Environment
 
-    def _set_action(self, action):
+    def _set_action(self, action: Any) -> None:
         """
         Function to apply an action to the robot.
 
@@ -295,7 +299,7 @@ class MyRobotEnv(GazeboBaseEnv.GazeboBaseEnv):
         """
         raise NotImplementedError()
 
-    def _get_observation(self):
+    def _get_observation(self) -> Any:
         """
         Get an observation from the environment.
 
@@ -308,7 +312,7 @@ class MyRobotEnv(GazeboBaseEnv.GazeboBaseEnv):
         """
         raise NotImplementedError()
 
-    def _get_reward(self, info: Optional[Dict[str, Any]] = None):
+    def _get_reward(self, info: Optional[Dict[str, Any]] = None) -> float:
         """
         Function to get a reward from the environment.
 
@@ -324,7 +328,7 @@ class MyRobotEnv(GazeboBaseEnv.GazeboBaseEnv):
         """
         raise NotImplementedError()
 
-    def _compute_terminated(self, info: Optional[Dict[str, Any]] = None):
+    def _compute_terminated(self, info: Optional[Dict[str, Any]] = None) -> bool:
         """
         Function to check if the episode is terminated due to reaching a terminal state.
 
@@ -340,7 +344,7 @@ class MyRobotEnv(GazeboBaseEnv.GazeboBaseEnv):
         """
         raise NotImplementedError()
 
-    def _compute_truncated(self, info: Optional[Dict[str, Any]] = None):
+    def _compute_truncated(self, info: Optional[Dict[str, Any]] = None) -> bool:
         """
         Function to check if the episode is truncated due non-terminal reasons.
 
@@ -358,7 +362,7 @@ class MyRobotEnv(GazeboBaseEnv.GazeboBaseEnv):
         """
         raise NotImplementedError()
 
-    def _set_init_params(self, options: Optional[Dict[str, Any]] = None):
+    def _set_init_params(self, options: Optional[Dict[str, Any]] = None) -> None:
         """
         Set initial parameters for the environment.
 
