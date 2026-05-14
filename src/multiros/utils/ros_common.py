@@ -97,6 +97,22 @@ def register_managed_process(popen, **selectors) -> None:
             # atexit will still fire on normal interpreter shutdown.
             _prev_sigint_handler = None
 
+        # Also register with rospy's shutdown machinery. This matters
+        # because ``rospy.init_node`` (typically called by the user's
+        # training script AFTER launch_roscore / launch_gazebo)
+        # installs its OWN SIGINT handler that overwrites ours — so
+        # our SIGINT handler would never fire on Ctrl+C. rospy's
+        # shutdown callback list is iterated regardless of who owns
+        # the signal handler, so wiring our cleanup in here is what
+        # actually makes Ctrl+C tear down roscore/Gazebo in the
+        # typical "import multiros; rospy.init_node; train" flow.
+        try:
+            rospy.on_shutdown(_cleanup_managed_processes)
+        except Exception:
+            # rospy unavailable / not initialised yet / etc. Atexit
+            # + SIGINT handler still cover the non-rospy cases.
+            pass
+
 
 def _sigint_handler(signum, frame):
     """
@@ -199,6 +215,18 @@ def _cleanup_managed_processes() -> None:
                 os.kill(int(pid), signal.SIGKILL)
             except (ProcessLookupError, PermissionError, ValueError):
                 pass
+
+    # Restore SIGINT to the default handler. Useful for the common
+    # case where this cleanup runs via rospy.on_shutdown: rospy may
+    # have installed its own SIGINT handler that doesn't terminate
+    # the script, so the user has to Ctrl+C multiple times. Resetting
+    # to SIG_DFL here means any further Ctrl+C kills the process
+    # immediately rather than re-entering rospy's handler.
+    try:
+        signal.signal(signal.SIGINT, signal.SIG_DFL)
+    except (ValueError, OSError):
+        pass
+
 
 """
     01. launch_roscore: To launch a rocore with a given or random (no overlapping) port
