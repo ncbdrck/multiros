@@ -1,6 +1,9 @@
 # MultiROS: ROS-Based Robot Simulation Environment for Concurrent Deep Reinforcement Learning
 
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+[![Documentation Status](https://readthedocs.org/projects/uniros/badge/?version=latest)](https://uniros.readthedocs.io/en/latest/?badge=latest)
+
+📚 **Full documentation**: [uniros.readthedocs.io](https://uniros.readthedocs.io/) (ecosystem-wide docs hosted via UniROS)
 
 MultiROS is an open-source Robot Operating System ([ROS](http://wiki.ros.org/))-based simulation environment designed for concurrent deep reinforcement learning. It provides a flexible and scalable framework for training and evaluating reinforcement learning agents for complex robotic tasks.
 
