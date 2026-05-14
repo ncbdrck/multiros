@@ -1,13 +1,13 @@
 """
-Round 7-fu + 7-fu-2 regression: managed-process registry tears down
-the roscore / Gazebo processes THIS script spawned on Ctrl+C or
+Regression: the managed-process registry tears down the
+roscore / Gazebo processes THIS script spawned on Ctrl+C or
 interpreter exit, scoped to processes we tracked (not host-wide).
 
-The user-facing failure mode that motivated Round 7-fu-2:
-``rospy.init_node()`` overwrites our SIGINT handler, so cleanup was
-never running on Ctrl+C in real training scripts. The fix wires
-cleanup into ``rospy.on_shutdown`` as well — these tests verify
-both registration paths and the cleanup behaviour.
+User-facing failure mode addressed: ``rospy.init_node()`` overwrites
+the SIGINT handler, so cleanup was never running on Ctrl+C in real
+training scripts. Cleanup is wired into ``rospy.on_shutdown`` as
+well — these tests verify both registration paths and the cleanup
+behaviour.
 """
 import signal
 import subprocess
@@ -158,9 +158,9 @@ class TestCleanup:
     def test_after_cleanup_sigint_is_reset_to_default(
         self, fresh_ros_common, fast_sleep, captured_pkills,
     ):
-        # Round 7-fu-2: after cleanup, SIGINT goes back to SIG_DFL so a
-        # subsequent Ctrl+C terminates the script immediately even if
-        # it's stuck in a non-responsive loop (e.g. SB3.learn()).
+        # After cleanup, SIGINT goes back to SIG_DFL so a subsequent
+        # Ctrl+C terminates the script immediately even if it's stuck
+        # in a non-responsive loop (e.g. SB3.learn()).
         fresh_ros_common.register_managed_process(
             _MockPopen(), roscore_port="11703", kind="roscore"
         )
@@ -174,7 +174,7 @@ class TestCleanup:
 class TestRospyShutdownPath:
     """rospy.on_shutdown invoking our callback must tear down successfully
     even when rospy.init_node has replaced our SIGINT handler (the
-    real-world failure case from Round 7-fu-2)."""
+    real-world failure case this path was added for)."""
 
     def test_cleanup_via_rospy_shutdown_after_sigint_was_stolen(
         self, fresh_ros_common, stub_rospy_ecosystem,

@@ -1,5 +1,5 @@
 """
-Round 8.2 regression: multiros.utils.{ros_markers, ros_kinematics,
+Regression: multiros.utils.{ros_markers, ros_kinematics,
 ros_controllers} must re-export the EXACT same symbols as
 uniros.utils.{...}. Identity equality, not just same name.
 """

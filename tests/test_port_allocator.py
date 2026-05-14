@@ -1,6 +1,6 @@
 """
-Round 6.1 regression: launch_roscore() uses socket.bind(0) to pick
-free ports atomically rather than guessing via a racy /tmp file.
+Regression: launch_roscore() uses socket.bind(0) to pick free
+ports atomically rather than guessing via a racy /tmp file.
 
 These tests exercise the allocator without launching real roscores
 (subprocess.Popen is monkeypatched).
@@ -152,7 +152,7 @@ class TestLaunchRoscore:
 
 
 class TestLegacyHelperDeprecation:
-    """Round 6.1: the four legacy port-list helpers emit DeprecationWarning."""
+    """The four legacy port-list helpers emit DeprecationWarning."""
 
     def test_get_all_the_ros_masters_emits_warning(self, patched_launch):
         with warnings.catch_warnings(record=True) as caught:
