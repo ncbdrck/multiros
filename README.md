@@ -174,17 +174,19 @@ the rest of the framework.
 The journal paper for the framework as a whole:
 
 ```bibtex
-@Article{s25185679,
-  AUTHOR  = {Kapukotuwa, Jayasekara and Lee, Brian and Devine, Declan and Qiao, Yuansong},
-  TITLE   = {UniROS: ROS-Based Reinforcement Learning Across Simulated and Real-World Robotics},
-  JOURNAL = {Sensors},
-  VOLUME  = {25},
-  YEAR    = {2025},
-  NUMBER  = {18},
-  PAGES   = {5679},
-  URL     = {https://www.mdpi.com/1424-8220/25/18/5679},
-  ISSN    = {1424-8220},
-  DOI     = {10.3390/s25185679},
+@article{kapukotuwa_uniros_2025,
+	title = {{UniROS}: {ROS}-{Based} {Reinforcement} {Learning} Across {Simulated} and {Real}-{World} {Robotics}},
+	shorttitle = {{UniROS}},
+	doi = {10.3390/s25185679},
+	journal = {Sensors},
+	author = {Kapukotuwa, Jayasekara and Lee, Brian and Devine, Declan and Qiao, Yuansong},
+	volume = {25},
+	number = {18},
+	month = sep,
+	year = {2025},
+	pages = {5679},
+	publisher = {{MDPI}},
+	url = {https://www.mdpi.com/1424-8220/25/18/5679},
 }
 ```
 
