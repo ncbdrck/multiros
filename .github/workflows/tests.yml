@@ -25,12 +25,15 @@ jobs:
         with:
           path: multiros
 
-      # multiros's proxy class + shared utilities live in UniROS after
-      # Round 8.1 / 8.2. We need UniROS importable for tests to run.
+      # multiros's proxy class + shared utilities live in UniROS. Clone the
+      # branch matching whatever branch this workflow is running on, so a PR
+      # or push on multiros's cleanup-2026 pulls UniROS's cleanup-2026, etc.
+      # Falls back to UniROS's default branch if there's no match.
       - name: Check out UniROS
         uses: actions/checkout@v4
         with:
           repository: ncbdrck/UniROS
+          ref: ${{ github.head_ref || github.ref_name }}
           path: UniROS
 
       - uses: actions/setup-python@v5
@@ -40,13 +43,15 @@ jobs:
       - name: Install Python deps
         run: |
           python -m pip install --upgrade pip
-          # catkin_pkg is needed because setup.py uses generate_distutils_setup.
-          # No ROS install — tests stub the rospy ecosystem.
-          pip install catkin_pkg pytest
+          # setup.py imports catkin_pkg + uses distutils. Install build deps in
+          # the OUTER env, then pass --no-build-isolation to pip install so the
+          # build subprocess can see them. Without this, pip creates a clean
+          # build sandbox and catkin_pkg is invisible there.
+          pip install setuptools wheel catkin_pkg pytest
           pip install gymnasium gymnasium_robotics numpy
-          # Install UniROS first (multiros depends on it)
-          pip install -e UniROS/uniros
-          pip install -e multiros
+          # Install UniROS first (multiros depends on it).
+          pip install -e UniROS/uniros --no-build-isolation
+          pip install -e multiros --no-build-isolation
 
       - name: Run pytest
         working-directory: multiros
