@@ -29,6 +29,12 @@ jobs:
       # branch matching whatever branch this workflow is running on, so a PR
       # or push on multiros's cleanup-2026 pulls UniROS's cleanup-2026, etc.
       # Falls back to UniROS's default branch if there's no match.
+      #
+      # IMPORTANT: when fast-forwarding cleanup-2026 → gymnasium across the
+      # ecosystem, merge UniROS *first* and the dependent repos after. If a
+      # dependent repo (multiros, realros) is pushed before UniROS, its CI
+      # will check out the *old* UniROS gymnasium tip (missing the new
+      # uniros._proxy and uniros.utils packages) and fail to import them.
       - name: Check out UniROS
         uses: actions/checkout@v4
         with:
