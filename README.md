@@ -157,22 +157,36 @@ We would like to thank the following projects and communities for their valuable
 - [frobs_rl](https://frobs-rl.readthedocs.io/en/latest/)
 - [gym-gazebo](https://github.com/erlerobot/gym-gazebo/)
 
+## Documentation
+
+Full ecosystem documentation — covering installation, ready-made
+environments, environment creation, training with any
+gymnasium-compatible RL library, and joint sim+real training —
+lives in the [UniROS repository](https://github.com/ncbdrck/UniROS)
+under `docs/`. MultiROS is documented there alongside RealROS and
+the rest of the framework.
+
 ## Cite
 
-If you use MultiROS in your research or work and would like to cite it, you can use the following citation:
+The journal paper for the framework as a whole:
 
-Repository
 ```bibtex
-@misc{multiros,
-  author = {Kapukotuwa, Jayasekara},
-  booktitle = {GitHub repository},
-  publisher = {GitHub},
-  title = {MultiROS: ROS-Based Robot Simulation Environment for Concurrent Deep Reinforcement Learning},
-  url = {https://github.com/ncbdrck/multiros},
-  year = {2022}
+@Article{s25185679,
+  AUTHOR  = {Kapukotuwa, Jayasekara and Lee, Brian and Devine, Declan and Qiao, Yuansong},
+  TITLE   = {UniROS: A Unified Framework for ROS-Based Reinforcement Learning Across Simulated and Real-World Robotics},
+  JOURNAL = {Sensors},
+  VOLUME  = {25},
+  YEAR    = {2025},
+  NUMBER  = {18},
+  PAGES   = {5679},
+  URL     = {https://www.mdpi.com/1424-8220/25/18/5679},
+  ISSN    = {1424-8220},
+  DOI     = {10.3390/s25185679},
 }
 ```
-Article
+
+The earlier conference paper specific to MultiROS:
+
 ```bibtex
 @inproceedings{kapukotuwa_multiros_2022,
 	title = {{MultiROS}: {ROS}-{Based} {Robot} {Simulation} {Environment} for {Concurrent} {Deep} {Reinforcement} {Learning}},
@@ -184,6 +198,19 @@ Article
 	year = {2022},
 	note = {ISSN: 2161-8089},
 	pages = {1098--1103},
+}
+```
+
+Repository:
+
+```bibtex
+@misc{multiros,
+  author = {Kapukotuwa, Jayasekara},
+  booktitle = {GitHub repository},
+  publisher = {GitHub},
+  title = {MultiROS: ROS-Based Robot Simulation Environment for Concurrent Deep Reinforcement Learning},
+  url = {https://github.com/ncbdrck/multiros},
+  year = {2022}
 }
 ```
 
