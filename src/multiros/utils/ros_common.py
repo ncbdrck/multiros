@@ -177,12 +177,26 @@ def _cleanup_managed_processes() -> None:
             except (ProcessLookupError, PermissionError, ValueError):
                 pass
 
-        # Kill the wrapper Popen (xterm/shell). This may or may not
-        # propagate to the actual roscore depending on whether xterm
-        # detached from the parent session.
+        # Kill the wrapper Popen (xterm/shell). If the popen was started
+        # with start_new_session=True (i.e. is its own pgrp leader),
+        # killpg the entire group so children like roslaunch + move_group
+        # + moveit_python_interface die alongside the xterm. Otherwise
+        # plain terminate() suffices (and killpg would risk hitting the
+        # parent's pgrp).
         try:
             if popen is not None and popen.poll() is None:
-                popen.terminate()
+                try:
+                    pgid = os.getpgid(popen.pid)
+                    is_session_leader = pgid == popen.pid
+                except (ProcessLookupError, PermissionError):
+                    is_session_leader = False
+                if is_session_leader:
+                    try:
+                        os.killpg(pgid, signal.SIGTERM)
+                    except (ProcessLookupError, PermissionError):
+                        pass
+                else:
+                    popen.terminate()
         except Exception:
             pass
 
@@ -209,7 +223,18 @@ def _cleanup_managed_processes() -> None:
         selectors = entry["selectors"]
         try:
             if popen is not None and popen.poll() is None:
-                popen.kill()
+                try:
+                    pgid = os.getpgid(popen.pid)
+                    is_session_leader = pgid == popen.pid
+                except (ProcessLookupError, PermissionError):
+                    is_session_leader = False
+                if is_session_leader:
+                    try:
+                        os.killpg(pgid, signal.SIGKILL)
+                    except (ProcessLookupError, PermissionError):
+                        pass
+                else:
+                    popen.kill()
         except Exception:
             pass
         for pid in selectors.get("gazebo_pids", []) or []:
@@ -252,6 +277,31 @@ def _port_is_free(port: int) -> bool:
         return True
     finally:
         sock.close()
+
+
+def _master_is_reachable(port: int, timeout: float = 1.0) -> bool:
+    """
+    Return True iff a TCP connection to ``localhost:port`` succeeds
+    within ``timeout`` seconds.
+
+    The ROS master is an XMLRPC server listening on the master URI port,
+    so a successful connect() is a strong signal that rosmaster is up
+    and accepting client registrations. This is the cheap counterpart
+    to ``rosgraph.Master().is_online()`` — we don't want to import
+    rosgraph just for the readiness check, and connecting directly
+    avoids any side effect on the current process's ROS_MASTER_URI.
+
+    Used by ``launch_roscore`` to verify the spawned roscore actually
+    came up before we point ROS_MASTER_URI at it. Without this check,
+    a silent xterm/roscore failure leaves the caller pointed at a
+    phantom master and every downstream ``wait_for_service`` blocks
+    for its full 30 s timeout.
+    """
+    try:
+        with socket.create_connection(("127.0.0.1", int(port)), timeout=timeout):
+            return True
+    except OSError:
+        return False
 
 
 # Track ports we've issued via _reserve_free_port within this Python
@@ -387,12 +437,45 @@ def launch_roscore(port: Optional[int] = None, set_new_master_vars: bool = True)
     # Diagnostic log only; not load-bearing.
     _append_port_log(ros_port)
 
-    # launch roscore as a term command
-    term_cmd = "roscore -p " + ros_port
-    term_cmd = "xterm -e ' " + term_cmd + "'"
-    roscore_proc = subprocess.Popen(term_cmd, shell=True)
-    time.sleep(5.0)
-    rospy.loginfo("Roscore launched! with port: " + ros_port)
+    # Launch roscore in xterm with verify+retry. The xterm wrapper
+    # sometimes returns success (no error from Popen) while the
+    # roscore inside it never binds — TIME_WAIT collision from a stale
+    # run, xterm DISPLAY issue, or rosout startup failure. Without
+    # verification, ``set_new_master_vars`` below points this process
+    # at a phantom master and every downstream wait_for_service blocks
+    # for its 30 s timeout (and roslaunch inside any subsequent
+    # ``launch_gazebo`` xterm starts its OWN rosmaster on an
+    # auto-allocated port, so gzserver registers there and the env
+    # never finds the /gazebo/* services it expects).
+    _MAX_TRIES = 3
+    _WAIT_AFTER_LAUNCH = 5.0
+    _VERIFY_TIMEOUT = 10.0
+    roscore_proc = None
+    for _attempt in range(_MAX_TRIES):
+        term_cmd = "xterm -e ' " + "roscore -p " + ros_port + "'"
+        roscore_proc = subprocess.Popen(term_cmd, shell=True)
+        time.sleep(_WAIT_AFTER_LAUNCH)
+        if _master_is_reachable(int(ros_port), timeout=_VERIFY_TIMEOUT):
+            rospy.loginfo("Roscore launched! with port: " + ros_port)
+            break
+        rospy.logwarn(
+            f"Roscore on port {ros_port} did not come up after "
+            f"{_WAIT_AFTER_LAUNCH:.0f}s (attempt {_attempt + 1}/{_MAX_TRIES}); "
+            "picking a fresh port and retrying."
+        )
+        try:
+            roscore_proc.terminate()
+        except Exception:
+            pass
+        ros_port = str(_reserve_free_port())
+        gazebo_port = str(_reserve_free_port())
+    else:
+        raise RuntimeError(
+            f"Could not launch a verifiable roscore after {_MAX_TRIES} "
+            "attempts. Check ~/.ros/log/ and that xterm + roscore work "
+            "in this terminal (DISPLAY set, no stale rosmaster on the "
+            "selected port)."
+        )
 
     # Register for Ctrl+C / atexit cleanup. The xterm wrapper may
     # detach, so we also record the port so cleanup can issue a
@@ -849,8 +932,18 @@ def ros_launch_launcher(pkg_name: Optional[str] = None,
     if launch_new_term:
         term_cmd = "xterm -e ' " + term_cmd + "'"
 
-    subprocess.Popen(term_cmd, shell=True)
+    # Register the spawned xterm/shell with the managed-process registry
+    # so atexit + SIGINT cleanup tears it down when the calling env exits.
+    # Without this, the launched roslaunch (e.g. MoveIt bring-up) is
+    # orphaned on env.close() and lingers as a zombie xterm + python +
+    # move_group stack. start_new_session=True makes the xterm a
+    # process-group leader so cleanup can ``killpg`` the whole subtree
+    # (xterm → roslaunch → move_group → moveit_python_interface) in one
+    # signal — SIGTERM on the xterm alone wouldn't propagate to its
+    # grandchildren.
+    _launch_proc = subprocess.Popen(term_cmd, shell=True, start_new_session=True)
     time.sleep(5.0)
+    register_managed_process(_launch_proc, kind=f"ros_launch:{pkg_name or 'abs_path'}")
 
     return True
 
@@ -972,8 +1065,12 @@ def ros_node_launcher(pkg_name: str, node_name: str,
     if launch_new_term:
         term_cmd = f"xterm -e '{term_cmd}'"
 
-    subprocess.Popen(term_cmd, shell=True)
+    # See ros_launch_launcher: start_new_session makes the xterm wrapper
+    # a process-group leader so atexit/SIGINT cleanup can killpg the
+    # whole subtree (xterm → rosrun → node) in one signal.
+    _node_proc = subprocess.Popen(term_cmd, shell=True, start_new_session=True)
     time.sleep(5.0)
+    register_managed_process(_node_proc, kind=f"ros_node:{pkg_name}/{node_name}")
 
     return rs_port, gz_port, True
 

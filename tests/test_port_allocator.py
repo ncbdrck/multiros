@@ -46,6 +46,10 @@ def patched_launch(monkeypatch, tmp_path):
     monkeypatch.setattr(_time, "sleep", lambda *a, **k: None)
     monkeypatch.setattr(ros_common, "change_ros_gazebo_master", lambda *a, **k: True)
     monkeypatch.setattr(ros_common, "_PORT_LOG_PATH", str(tmp_path / "ports.log"))
+    # launch_roscore now verifies the spawned roscore is reachable before
+    # returning. The fixture's Popen is a no-op so no real roscore exists;
+    # stub the reachability probe to True so the retry loop doesn't fire.
+    monkeypatch.setattr(ros_common, "_master_is_reachable", lambda *a, **k: True)
     yield
 
 
