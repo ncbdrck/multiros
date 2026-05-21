@@ -10,16 +10,37 @@ class NormalizeObservationWrapper(gym.ObservationWrapper):
     """
     A wrapper for normalizing the observation space of an environment.
 
-    This wrapper normalizes the observations to be between -1 and 1.
-    It can handle environments whose observation space is either a Box or
-    a dictionary with keys for 'observation', 'achieved_goal', and 'desired_goal'.
+    Observations are normalized to ``[-1, 1]``. For Box observation spaces
+    this is straightforward; for Dict observation spaces shaped like the
+    Gymnasium-robotics ``GoalEnv`` API (keys ``observation``,
+    ``achieved_goal``, ``desired_goal``), the ``observation`` slot is
+    always normalized; the goal slots are normalized only when
+    ``normalize_goal_spaces=True``.
+
+    When the goal slots are normalized, the wrapper also:
+
+      * declares the normalized goal entries in ``observation_space`` as
+        ``Box(-1, 1, ...)`` (so the obs the wrapper returns is actually
+        inside the declared space), and
+      * overrides ``compute_reward`` / ``compute_terminated`` /
+        ``compute_truncated`` to unnormalize the goal arguments before
+        delegating to the underlying env. This is required for HER-style
+        algorithms: the replay buffer stores the WRAPPER's observation
+        (normalized goals) and then calls
+        ``env.compute_reward(desired_goal, achieved_goal, info)`` for
+        reward recomputation. Without the override, the underlying env's
+        ``compute_reward`` would receive ``[-1, 1]`` arrays and apply a
+        metric-distance tolerance to them, producing meaningless rewards.
 
     Args:
-        env (gym.Env): The environment to wrap.
-        normalize_goal_spaces (bool): Whether to normalize the achieved_goal and desired_goal spaces.
+        env: The environment to wrap.
+        normalize_goal_spaces: Whether to also normalize the
+            ``achieved_goal`` and ``desired_goal`` entries (default
+            ``False``; only meaningful for Dict / GoalEnv spaces).
 
     Raises:
-        ValueError: If the observation space of the environment is not supported.
+        ValueError: If the observation space is neither Box nor a Dict
+            with the goal-env keys.
     """
 
     def __init__(self, env: gym.Env, normalize_goal_spaces: bool = False) -> None:
@@ -29,19 +50,38 @@ class NormalizeObservationWrapper(gym.ObservationWrapper):
 
         self.normalize_goal_spaces = normalize_goal_spaces
 
-        # check if it is gymnasium.Env based
+        # Box observation space → normalize to [-1, 1].
         if isinstance(env.observation_space, gym.spaces.Box):
             self.observation_space = gym.spaces.Box(low=-1.0, high=1.0, shape=env.observation_space.shape,
                                                     dtype=np.float32)
             self.normalize_observation = self._normalize_box_observation
 
-        # check if it is gymnasium_robotics.GoalEnv based
+        # Dict observation space (GoalEnv) → normalize 'observation', and
+        # optionally the goal entries.
         elif isinstance(env.observation_space, gym.spaces.Dict):
+            ag_space = env.observation_space['achieved_goal']
+            dg_space = env.observation_space['desired_goal']
+
+            # Cache the underlying metric bounds so the unnormalize helpers
+            # below can roundtrip values from [-1, 1] back to the original
+            # space before delegating to the wrapped env's reward / done.
+            self._ag_low = ag_space.low
+            self._ag_high = ag_space.high
+            self._dg_low = dg_space.low
+            self._dg_high = dg_space.high
+
+            if normalize_goal_spaces:
+                ag_decl = gym.spaces.Box(low=-1.0, high=1.0, shape=ag_space.shape, dtype=np.float32)
+                dg_decl = gym.spaces.Box(low=-1.0, high=1.0, shape=dg_space.shape, dtype=np.float32)
+            else:
+                ag_decl = ag_space
+                dg_decl = dg_space
+
             self.observation_space = gym.spaces.Dict({
                 'observation': gym.spaces.Box(low=-1.0, high=1.0, shape=env.observation_space['observation'].shape,
                                               dtype=np.float32),
-                'achieved_goal': env.observation_space['achieved_goal'],
-                'desired_goal': env.observation_space['desired_goal']
+                'achieved_goal': ag_decl,
+                'desired_goal': dg_decl,
             })
             self.normalize_observation = self._normalize_dict_observation
         else:
@@ -64,30 +104,20 @@ class NormalizeObservationWrapper(gym.ObservationWrapper):
         return observation
 
     def _normalize_achieved_goal(self, achieved_goal: np.ndarray) -> np.ndarray:
-        # Check that the achieved_goal_space is a Box space
         if not isinstance(self.env.observation_space['achieved_goal'], gym.spaces.Box):
             raise ValueError(f"Unsupported achieved_goal space: {type(self.env.observation_space['achieved_goal'])}")
-
-        # Normalize an achieved_goal observation to be between -1 and 1
-        low = self.env.observation_space['achieved_goal'].low
-        high = self.env.observation_space['achieved_goal'].high
-
-        achieved_goal = 2 * (achieved_goal - low) / (high - low) - 1.0
-
-        return achieved_goal
+        return 2 * (achieved_goal - self._ag_low) / (self._ag_high - self._ag_low) - 1.0
 
     def _normalize_desired_goal(self, desired_goal: np.ndarray) -> np.ndarray:
-        # Check that the desired_goal_space is a Box space
         if not isinstance(self.env.observation_space['desired_goal'], gym.spaces.Box):
             raise ValueError(f"Unsupported desired_goal space: {type(self.env.observation_space['desired_goal'])}")
+        return 2 * (desired_goal - self._dg_low) / (self._dg_high - self._dg_low) - 1.0
 
-        # Normalize a desired_goal observation to be between -1 and 1
-        low = self.env.observation_space['desired_goal'].low
-        high = self.env.observation_space['desired_goal'].high
+    def _unnormalize_achieved_goal(self, achieved_goal: np.ndarray) -> np.ndarray:
+        return (np.asarray(achieved_goal) + 1.0) * (self._ag_high - self._ag_low) / 2.0 + self._ag_low
 
-        desired_goal = 2 * (desired_goal - low) / (high - low) - 1.0
-
-        return desired_goal
+    def _unnormalize_desired_goal(self, desired_goal: np.ndarray) -> np.ndarray:
+        return (np.asarray(desired_goal) + 1.0) * (self._dg_high - self._dg_low) / 2.0 + self._dg_low
 
     def _normalize_dict_observation(self, observation: Dict[str, np.ndarray]) -> Dict[str, np.ndarray]:
         # Normalize a dictionary observation with keys for 'observation', 'achieved_goal', and 'desired_goal'
@@ -103,3 +133,28 @@ class NormalizeObservationWrapper(gym.ObservationWrapper):
 
         # Normalize the observation using the appropriate method
         return self.normalize_observation(observation)
+
+    # ----- GoalEnv hooks: HER replay-buffer recomputation path ---------------
+    # When normalize_goal_spaces=True the wrapper returns goals in [-1, 1].
+    # The wrapped env's compute_reward / compute_terminated / compute_truncated
+    # interpret goals in the original metric units. Unnormalize before
+    # delegating so HER (which stores the wrapper's observation and calls
+    # these methods on relabeled transitions) sees a consistent metric view.
+
+    def compute_reward(self, achieved_goal, desired_goal, info):
+        if self.normalize_goal_spaces:
+            achieved_goal = self._unnormalize_achieved_goal(achieved_goal)
+            desired_goal = self._unnormalize_desired_goal(desired_goal)
+        return self.env.compute_reward(achieved_goal, desired_goal, info)
+
+    def compute_terminated(self, achieved_goal, desired_goal, info):
+        if self.normalize_goal_spaces:
+            achieved_goal = self._unnormalize_achieved_goal(achieved_goal)
+            desired_goal = self._unnormalize_desired_goal(desired_goal)
+        return self.env.compute_terminated(achieved_goal, desired_goal, info)
+
+    def compute_truncated(self, achieved_goal, desired_goal, info):
+        if self.normalize_goal_spaces:
+            achieved_goal = self._unnormalize_achieved_goal(achieved_goal)
+            desired_goal = self._unnormalize_desired_goal(desired_goal)
+        return self.env.compute_truncated(achieved_goal, desired_goal, info)
