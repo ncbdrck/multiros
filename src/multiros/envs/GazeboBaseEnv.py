@@ -1,5 +1,6 @@
 #!/bin/python3
 
+import numpy as np
 import rospy
 import gymnasium as gym
 from multiros.utils import gazebo_core
@@ -274,6 +275,24 @@ class GazeboBaseEnv(gym.Env):
             rospy.loginfo(self.MAGENTA + "*************** End Reset Env" + self.ENDC)
 
         return self.observation, self.info
+
+    def _sample_box(self, box: gym.spaces.Box) -> np.ndarray:
+        """
+        Sample uniformly from a ``gym.spaces.Box`` using the env's own
+        ``self.np_random``.
+
+        ``gym.spaces.Box.sample()`` uses the space's internal RNG, which is
+        a separate ``np.random.Generator`` instance not reseeded by
+        ``env.reset(seed=...)``. Calling ``reset(seed=X)`` only seeds
+        ``self.np_random`` (the env-level generator), so spaces created
+        with ``Box(..., seed=...)`` ignore the reset seed and break
+        Gymnasium's reproducibility contract.
+
+        Use this helper at sampling sites that should reproduce when the
+        caller passes a reset seed (goal poses, cube poses, anything that
+        determines the rollout). Returns an array of the box's dtype.
+        """
+        return self.np_random.uniform(box.low, box.high).astype(box.dtype)
 
     def close(self) -> None:
         """
