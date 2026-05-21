@@ -1,6 +1,8 @@
 #!/bin/python3
 
+import numpy as np
 import rospy
+import gymnasium as gym
 import gymnasium_robotics
 from multiros.utils import gazebo_core
 from multiros.utils import gazebo_models
@@ -280,6 +282,27 @@ class GazeboGoalEnv(gymnasium_robotics.GoalEnv):
 
         return {'observation': self.observation, 'achieved_goal': self.achieved_goal,
                 'desired_goal': self.desired_goal}, self.info
+
+    def _sample_box(self, box: gym.spaces.Box) -> np.ndarray:
+        """
+        Sample uniformly from a ``gym.spaces.Box`` using the env's own
+        ``self.np_random``. See ``GazeboBaseEnv._sample_box`` for the full
+        rationale; this is the goal-env mirror so HER task envs inherit
+        the same primitive.
+        """
+        return self.np_random.uniform(box.low, box.high).astype(box.dtype)
+
+    def _safe_unit_vector(self, vec: np.ndarray, eps: float = 1e-8) -> np.ndarray:
+        """
+        Return ``vec / ||vec||`` with a zero-norm guard. See
+        ``GazeboBaseEnv._safe_unit_vector`` for the full rationale; this
+        is the goal-env mirror so HER task envs inherit the same
+        primitive.
+        """
+        n = float(np.linalg.norm(vec))
+        if n < eps:
+            return np.zeros_like(vec)
+        return vec / n
 
     def close(self) -> None:
         """
