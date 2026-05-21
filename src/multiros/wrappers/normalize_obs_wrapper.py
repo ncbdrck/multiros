@@ -3,8 +3,6 @@ from typing import Any, Dict, Union
 import gymnasium as gym
 import numpy as np
 
-import rospy
-
 
 class NormalizeObservationWrapper(gym.ObservationWrapper):
     """
@@ -120,14 +118,19 @@ class NormalizeObservationWrapper(gym.ObservationWrapper):
         return (np.asarray(desired_goal) + 1.0) * (self._dg_high - self._dg_low) / 2.0 + self._dg_low
 
     def _normalize_dict_observation(self, observation: Dict[str, np.ndarray]) -> Dict[str, np.ndarray]:
-        # Normalize a dictionary observation with keys for 'observation', 'achieved_goal', and 'desired_goal'
-        observation['observation'] = self._normalize_box_observation(observation['observation'])
-
+        # Build a NEW dict instead of mutating the caller's. The
+        # underlying env may cache the dict it returned from step() /
+        # reset() (real-time mode does this for the rospy.Timer loop),
+        # and SB3 buffers may also retain references. In-place writes
+        # corrupted those callers under the old behaviour.
+        out = {'observation': self._normalize_box_observation(observation['observation'])}
         if self.normalize_goal_spaces:
-            observation['achieved_goal'] = self._normalize_achieved_goal(observation['achieved_goal'])
-            observation['desired_goal'] = self._normalize_desired_goal(observation['desired_goal'])
-
-        return observation
+            out['achieved_goal'] = self._normalize_achieved_goal(observation['achieved_goal'])
+            out['desired_goal'] = self._normalize_desired_goal(observation['desired_goal'])
+        else:
+            out['achieved_goal'] = observation['achieved_goal']
+            out['desired_goal'] = observation['desired_goal']
+        return out
 
     def observation(self, observation: Union[np.ndarray, Dict[str, np.ndarray]]) -> Union[np.ndarray, Dict[str, np.ndarray]]:
 
