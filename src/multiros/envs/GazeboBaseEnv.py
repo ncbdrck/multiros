@@ -294,6 +294,25 @@ class GazeboBaseEnv(gym.Env):
         """
         return self.np_random.uniform(box.low, box.high).astype(box.dtype)
 
+    def _safe_unit_vector(self, vec: np.ndarray, eps: float = 1e-8) -> np.ndarray:
+        """
+        Return ``vec / ||vec||`` with a zero-norm guard.
+
+        Task envs commonly use a direction-to-goal vector as part of the
+        observation: ``linear_dist_ee_goal / np.linalg.norm(...)``. When
+        the EE is exactly at the goal (e.g. just after a successful
+        reach), the norm is 0 and the division yields NaNs that pollute
+        the observation and may fail an SB3 / env_checker observation-
+        space check. Returning a zero vector below ``eps`` is the
+        conventional safe behaviour: the direction is undefined at the
+        goal, and a zero vector encodes "no direction" without breaking
+        downstream arithmetic.
+        """
+        n = float(np.linalg.norm(vec))
+        if n < eps:
+            return np.zeros_like(vec)
+        return vec / n
+
     def close(self) -> None:
         """
         Close the environment.
