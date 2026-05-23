@@ -179,7 +179,7 @@ To get started with MultiROS, follow these steps:
     ```
 ## Usage
 
-Refer to the [templates](https://github.com/ncbdrck/multiros/tree/gymnasium/src/multiros/templates) or the [examples](https://github.com/ncbdrck/rl_environments) to see how MultiROS can create a simulation environment for RL applications.
+Refer to the [Docs](https://uniros.readthedocs.io/en/latest/guides/env_creation_sim.html), [templates](https://github.com/ncbdrck/multiros/tree/gymnasium/src/multiros/templates) or the [examples](https://github.com/ncbdrck/rl_environments) to see how MultiROS can create a simulation environment for RL applications.
 
 The installation instructions for the examples are provided in the respective repositories.
 
