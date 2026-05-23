@@ -34,6 +34,12 @@ The script asks once whether to install all components or pick per-
 component; refuses to run on non-Ubuntu-20.04 (Noetic requirement).
 The manual setup steps below still work for piece-by-piece installs.
 
+**Don't have Ubuntu 20.04?** A Docker image is shipped under
+[`docker/`](docker/) — see [`docker/README.md`](docker/README.md)
+for build / run / GPU / hardware-passthrough instructions. Works on
+Ubuntu 22.04 / 24.04 hosts, on WSL2, and on machines with GPUs that
+have no Ubuntu 20.04 driver.
+
 ## Prerequisites
 
 Before installing MultiROS manually, make sure you have the following prerequisites:
