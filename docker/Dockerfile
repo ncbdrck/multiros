@@ -1,4 +1,4 @@
-# UniROS RL stack — Ubuntu 20.04 + ROS Noetic + framework + 4 robots.
+# UniROS RL stack — CUDA Ubuntu 20.04 + ROS Noetic + framework + 4 robots.
 #
 # Build (from the directory containing this Dockerfile):
 #   ./build.sh                          # uses your host UID/GID by default
@@ -15,11 +15,37 @@
 # sb3_ros_support, rl_environments, rl_training_validation) so users
 # can build it from whichever repo they cloned first.
 
-FROM ubuntu:20.04
+FROM nvidia/cuda:12.9.2-devel-ubuntu20.04
 
 ARG DEBIAN_FRONTEND=noninteractive
 ARG TZ=Etc/UTC
-ENV TZ=${TZ}
+ENV DEBIAN_FRONTEND=${DEBIAN_FRONTEND} \
+    DEBCONF_NONINTERACTIVE_SEEN=true \
+    TZ=${TZ}
+
+# Make long ROS / Ubuntu apt transactions less fragile in Docker builds.
+# This helps with transient mirror/network errors such as failed downloads
+# of large dependency sets while installing ros-noetic-desktop-full.
+RUN printf 'Acquire::Retries "5";\nAcquire::http::Timeout "60";\nAcquire::https::Timeout "60";\n' \
+        > /etc/apt/apt.conf.d/80-retries
+
+# Pre-seed every debconf prompt that has historically shown up when ROS /
+# MoveIt / X11 / keyboard packages get pulled in transitively. With these
+# answers locked in, no install step can block waiting for keyboard layout,
+# timezone region, or console encoding selection — even if a package
+# silently resets the debconf frontend internally.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends debconf-utils \
+    && echo "tzdata tzdata/Areas select Etc"                                        | debconf-set-selections \
+    && echo "tzdata tzdata/Zones/Etc select UTC"                                    | debconf-set-selections \
+    && echo "keyboard-configuration keyboard-configuration/layoutcode string us"    | debconf-set-selections \
+    && echo "keyboard-configuration keyboard-configuration/layout select English (US)" | debconf-set-selections \
+    && echo "keyboard-configuration keyboard-configuration/variantcode string"      | debconf-set-selections \
+    && echo "keyboard-configuration keyboard-configuration/modelcode string pc105"  | debconf-set-selections \
+    && echo "keyboard-configuration keyboard-configuration/xkb-keymap select us"    | debconf-set-selections \
+    && echo "console-setup console-setup/charmap47 select UTF-8"                    | debconf-set-selections \
+    && echo "console-setup console-setup/codeset47 select Guess optimal character set" | debconf-set-selections \
+    && rm -rf /var/lib/apt/lists/*
 
 # The container runs as a non-root user so that bind-mounted host
 # workspaces don't end up with root-owned build/ and devel/ files.
@@ -31,7 +57,8 @@ ARG USER_GID=1000
 
 # Minimal system deps the installer itself needs to bootstrap. Everything
 # else (ROS Noetic, framework packages, vendor robot packages, pip deps)
-# is pulled in by install_uniros_stack.sh.
+# is pulled in by install_uniros_stack.sh. Terminator is included for an
+# easier multi-terminal workflow when running the GUI container.
 RUN apt-get update && apt-get install -y --no-install-recommends \
         ca-certificates \
         curl \
@@ -44,6 +71,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         build-essential \
         python3-pip \
         ncurses-bin \
+        terminator \
     && ln -fs /usr/share/zoneinfo/${TZ} /etc/localtime \
     && dpkg-reconfigure --frontend noninteractive tzdata \
     && locale-gen en_US.UTF-8 \
@@ -54,11 +82,15 @@ ENV LANG=en_US.UTF-8 \
     LC_ALL=en_US.UTF-8
 
 # Create the install user with passwordless sudo. The installer uses
-# sudo for system-level steps (apt, rosdep init); NOPASSWD keeps it
-# non-interactive during the image build.
+# sudo for system-level steps (apt, rosdep init). Preserve the noninteractive
+# debconf environment through sudo so package configuration cannot block
+# Docker builds with prompts such as keyboard layout selection.
 RUN groupadd --gid ${USER_GID} ${USERNAME} \
     && useradd --uid ${USER_UID} --gid ${USER_GID} -m -s /bin/bash ${USERNAME} \
-    && echo "${USERNAME} ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/${USERNAME} \
+    && { \
+        echo "${USERNAME} ALL=(ALL) NOPASSWD:ALL"; \
+        echo 'Defaults env_keep += "DEBIAN_FRONTEND DEBCONF_NONINTERACTIVE_SEEN TZ"'; \
+    } > /etc/sudoers.d/${USERNAME} \
     && chmod 0440 /etc/sudoers.d/${USERNAME}
 
 USER ${USERNAME}
@@ -71,6 +103,8 @@ WORKDIR /home/${USERNAME}
 # user's HOME so bind mounts on a host with matching UID work cleanly.
 COPY --chown=${USERNAME}:${USERNAME} install_uniros_stack.sh /tmp/install_uniros_stack.sh
 RUN chmod +x /tmp/install_uniros_stack.sh \
+    && sed -i 's@source /opt/ros/noetic/setup.bash@set +u; source /opt/ros/noetic/setup.bash; set -u@' /tmp/install_uniros_stack.sh \
+    && sed -i 's@source "$WORKSPACE_PATH/devel/setup.bash" || true@set +u; source "$WORKSPACE_PATH/devel/setup.bash" || true; set -u@' /tmp/install_uniros_stack.sh \
     && UNIROS_INSTALL_IN_DOCKER=1 \
        /tmp/install_uniros_stack.sh -y -p /home/${USERNAME}/uniros_ws \
     && sudo rm -f /tmp/install_uniros_stack.sh \
