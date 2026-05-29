@@ -1,8 +1,17 @@
-# MultiROS Requirements
+# Python dependencies for the multiros framework package.
+#
+# Install with:
+#   python3 -m pip install -r requirements.txt
+#
+# Pins match the rest of the framework stack
+# (realros / sb3_ros_support / downstream env + train packages)
+# so the wrappers and the SB3 learners agree on the same
+# Gymnasium API surface. ROS Noetic dependencies (rospy, ...) are
+# installed system-wide via apt and are NOT listed here.
 
-# Gym library for reinforcement learning environments
-gymnasium
-gymnasium_robotics
+# RL API surface + goal-env helpers.
+gymnasium==0.29.1
+gymnasium-robotics==1.2.4
 
-# NumPy for numerical computations
-numpy
+# Numerical stack.
+numpy==1.23.3
