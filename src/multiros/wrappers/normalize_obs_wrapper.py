@@ -144,21 +144,16 @@ class NormalizeObservationWrapper(gym.ObservationWrapper):
     # delegating so HER (which stores the wrapper's observation and calls
     # these methods on relabeled transitions) sees a consistent metric view.
     #
-    # IMPORTANT — compute_reward argument order matches the SB3 HER replay
-    # buffer call site, which passes obs["desired_goal"] as the first
-    # positional and next_obs["achieved_goal"] as the second
-    # (stable_baselines3/her/her_replay_buffer.py: env.env_method(
-    #   "compute_reward", obs["desired_goal"], next_obs["achieved_goal"],
-    #   infos, ...)). The underlying env's compute_reward follows the
-    # gymnasium-robotics convention (achieved_goal, desired_goal, info), so
-    # this method takes the SB3 order and forwards in the swapped order
-    # to env.compute_reward. compute_terminated / compute_truncated are
-    # not called by SB3 HER, so they stay in the gymnasium-robotics order.
+    # Argument order follows the gymnasium-robotics convention
+    # (achieved_goal, desired_goal, info), matching SB3 2.1+ HER which
+    # invokes env.compute_reward(next_obs["achieved_goal"],
+    # obs["desired_goal"], infos). Each goal is unnormalized with the
+    # bounds of its own space before the call is forwarded.
 
-    def compute_reward(self, desired_goal, achieved_goal, info):
+    def compute_reward(self, achieved_goal, desired_goal, info):
         if self.normalize_goal_spaces:
-            desired_goal = self._unnormalize_desired_goal(desired_goal)
             achieved_goal = self._unnormalize_achieved_goal(achieved_goal)
+            desired_goal = self._unnormalize_desired_goal(desired_goal)
         return self.env.compute_reward(achieved_goal, desired_goal, info)
 
     def compute_terminated(self, achieved_goal, desired_goal, info):
