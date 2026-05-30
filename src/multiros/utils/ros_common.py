@@ -80,9 +80,10 @@ def register_managed_process(popen, **selectors) -> None:
             when terminating the Popen alone is not enough (e.g. the
             real child detached from the wrapper). Recognised keys
             are ``roscore_port`` (str | int), which triggers
-            ``pkill -f "roscore -p <port>"``; ``gazebo_pids``
-            (list[int]), PIDs that will be SIGTERM'd then SIGKILL'd;
-            and ``kind`` (str), a free-form label used in log lines.
+            ``pkill -f "roscore -p <port>"``; ``gazebo_pids`` and
+            ``mujoco_pids`` (list[int]), PIDs that will be SIGTERM'd
+            then SIGKILL'd; and ``kind`` (str), a free-form label used
+            in log lines.
     """
     global _handlers_installed, _prev_sigint_handler
     with _managed_lock:
@@ -177,6 +178,14 @@ def _cleanup_managed_processes() -> None:
             except (ProcessLookupError, PermissionError, ValueError):
                 pass
 
+        # Kill specific mujoco_node PIDs we captured at launch, for the
+        # same reason as the gzserver/gzclient PIDs above.
+        for pid in selectors.get("mujoco_pids", []) or []:
+            try:
+                os.kill(int(pid), signal.SIGTERM)
+            except (ProcessLookupError, PermissionError, ValueError):
+                pass
+
         # Kill the wrapper Popen (xterm/shell). If the popen was started
         # with start_new_session=True (i.e. is its own pgrp leader),
         # killpg the entire group so children like roslaunch + move_group
@@ -238,6 +247,11 @@ def _cleanup_managed_processes() -> None:
         except Exception:
             pass
         for pid in selectors.get("gazebo_pids", []) or []:
+            try:
+                os.kill(int(pid), signal.SIGKILL)
+            except (ProcessLookupError, PermissionError, ValueError):
+                pass
+        for pid in selectors.get("mujoco_pids", []) or []:
             try:
                 os.kill(int(pid), signal.SIGKILL)
             except (ProcessLookupError, PermissionError, ValueError):

@@ -83,6 +83,7 @@ _force_stub("geometry_msgs", {})
 _force_stub("geometry_msgs.msg", {
     "Point": _DummyMsg, "Pose": _DummyMsg, "Quaternion": _DummyMsg,
     "Vector3": _DummyMsg, "PoseStamped": _DummyMsg, "Twist": _DummyMsg,
+    "TwistStamped": _DummyMsg,
     "Transform": _DummyMsg, "TransformStamped": _DummyMsg,
     "Vector3Stamped": _DummyMsg, "QuaternionStamped": _DummyMsg,
     "Wrench": _DummyMsg, "WrenchStamped": _DummyMsg, "PointStamped": _DummyMsg,
@@ -128,6 +129,35 @@ _force_stub("gazebo_msgs.srv", {
 _force_stub("gazebo_msgs.msg", {"ModelState": _DummyMsg, "ODEPhysics": _DummyMsg})
 _force_stub("std_srvs", {})
 _force_stub("std_srvs.srv", {"Empty": _DummyMsg})
+
+# MuJoCo message packages used by multiros.utils.{mujoco_core, mujoco_physics,
+# mujoco_models}. mujoco_ros_pkgs is source-built and absent on CI / Gazebo-only
+# installs; the modules guard the import, but stubbing the types lets the tests
+# exercise the MuJoCo code paths.
+_force_stub("mujoco_ros_msgs", {})
+_force_stub("mujoco_ros_msgs.srv", {
+    "SetPause": _DummyMsg, "Reload": _DummyMsg, "SetFloat": _DummyMsg,
+    "SetGravity": _DummyMsg, "GetGravity": _DummyMsg, "GetSimInfo": _DummyMsg,
+    "SetBodyState": _DummyMsg, "GetBodyState": _DummyMsg,
+})
+_force_stub("mujoco_ros_msgs.msg", {
+    "StepAction": _DummyMsg, "StepGoal": _DummyMsg, "BodyState": _DummyMsg,
+})
+_force_stub("actionlib", {
+    "SimpleActionClient": lambda *a, **k: types.SimpleNamespace(
+        wait_for_server=lambda *a2, **k2: True,
+        send_goal=lambda *a2, **k2: None,
+        wait_for_result=lambda *a2, **k2: None,
+        get_result=lambda *a2, **k2: None,
+    ),
+})
+_force_stub("dynamic_reconfigure", {})
+_force_stub("dynamic_reconfigure.client", {
+    "Client": lambda *a, **k: types.SimpleNamespace(
+        update_configuration=lambda *a2, **k2: None,
+        get_configuration=lambda *a2, **k2: {},
+    ),
+})
 
 # moveit_commander is the real heavy MoveIt Python wrapper. multiros's
 # moveit_multiros.py imports it at module load. We stub it because the

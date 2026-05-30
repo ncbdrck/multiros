@@ -41,6 +41,15 @@
   <!-- multiros.core.MultirosGym is an alias for uniros._proxy.GymProxy. -->
   <exec_depend>uniros</exec_depend>
 
+  <!--
+    The MuJoCo backend (mujoco_ros, mujoco_ros_msgs, mujoco_ros_control) is an
+    optional, source-built alternative to Gazebo and is intentionally NOT declared
+    as a dependency: it is not available through rosdep, and the Python modules
+    import it lazily so Gazebo-only installs are unaffected. See the MuJoCo backend
+    setup notes in the README for how to build it.
+  -->
+
+
 
   <!-- The export tag contains other, unspecified, tags -->
   <export>
