@@ -1,12 +1,12 @@
 """
 Unit tests for the MuJoCo scene composition (MujocoSceneManager).
 
-These exercise the pure-XML composition logic that backs the Route-A
-spawn/delete mechanism: adding/removing objects, free-joint emission,
-asset merging, and resolving the base scene's asset directories to
-absolute paths so a regenerated scene resolves meshes from any working
-directory. The reload service call itself is monkeypatched out — these
-tests do not require a running simulator.
+These exercise the pure-XML composition logic that backs the
+reload-based spawn/delete mechanism: adding/removing objects,
+free-joint emission, asset merging, and resolving the base scene's
+asset directories to absolute paths so a regenerated scene resolves
+meshes from any working directory. The reload service call itself is
+monkeypatched out — these tests do not require a running simulator.
 """
 import xml.etree.ElementTree as ET
 

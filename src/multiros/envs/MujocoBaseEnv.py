@@ -212,8 +212,9 @@ class MujocoBaseEnv(gym.Env):
                     _safe_ros_sleep(self.action_cycle_time)
                 mujoco_core.pause_mujoco(server_name=self.server_name)
             else:
-                # Real-time (paper §7): physics is never paused; apply the action and let the
-                # trailing sleep pace the step while the background timer refreshes obs/reward.
+                # Real-time loop: physics is never paused; apply the action and let the trailing
+                # sleep pace the step while the background timer refreshes obs/reward. This is the
+                # loop intended for sim->real transfer because it matches the real-env timing.
                 self._set_action(action)
                 if self.action_cycle_time > 0.0:
                     _safe_ros_sleep(self.action_cycle_time)
