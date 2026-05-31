@@ -215,7 +215,14 @@ def mujoco_set_body_state(body_name: str, reference_frame: str = "world",
         set_body_state = rospy.ServiceProxy(service_name, SetBodyState)
         result = set_body_state(state=body_state, set_pose=set_pose, set_twist=set_twist,
                                 set_mass=False, reset_qpos=reset_qpos)
-        rospy.sleep(sleep_time)
+        # Tolerate the simulation clock being rewound by a reset: under use_sim_time, resetting the
+        # simulator rewinds /clock, so a rospy.sleep that straddles the reset raises
+        # ROSTimeMovedBackwardsException. set_body_state is commonly called during episode reset
+        # (e.g. repositioning an object), so swallow that one-off and continue.
+        try:
+            rospy.sleep(sleep_time)
+        except rospy.exceptions.ROSTimeMovedBackwardsException:
+            pass
         return bool(result.success)
 
     except rospy.ServiceException as e:
