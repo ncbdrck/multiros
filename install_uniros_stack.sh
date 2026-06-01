@@ -460,6 +460,12 @@ install_mujoco_backend() {
     clone_if_missing "https://github.com/ubi-agni/mujoco_ros_pkgs.git" \
                      "$WORKSPACE_PATH/src/mujoco_ros_pkgs" -b noetic-devel
 
+    # Clone the example VX300S MuJoCo environments that validate the backend
+    # end-to-end (reach / push / pick-and-place, plus goal variants). Optional
+    # but handy as a working reference for building your own MuJoCo task envs.
+    clone_if_missing "https://github.com/ncbdrck/vx300s_mujoco_envs.git" \
+                     "$WORKSPACE_PATH/src/vx300s_mujoco_envs"
+
     ok "MuJoCo backend dependencies ready."
 }
 
