@@ -45,10 +45,8 @@
     The MuJoCo backend (mujoco_ros, mujoco_ros_msgs, mujoco_ros_control) is an
     optional, source-built alternative to Gazebo and is intentionally NOT declared
     as a dependency: it is not available through rosdep, and the Python modules
-    import it lazily so Gazebo-only installs are unaffected. See the UniROS
-    documentation MuJoCo backend guide
-    (https://uniros.readthedocs.io/en/latest/guides/mujoco_backend.html) for
-    install steps; the install_uniros_stack.sh -m flag bootstraps the stack.
+    import it lazily so Gazebo-only installs are unaffected. See the MuJoCo backend
+    setup notes in the README for how to build it.
   -->
 
 

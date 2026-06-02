@@ -37,7 +37,7 @@ from typing import Dict, List, Optional, Sequence, Tuple
 
 from std_msgs.msg import Header
 from geometry_msgs.msg import Pose, PoseStamped, Twist, TwistStamped, Point, Quaternion, Vector3
-from multiros.utils import mujoco_core, ros_common, ros_controllers
+from multiros.utils import ros_common, ros_controllers
 
 # These interfaces are only required for the MuJoCo backend. Import them lazily so that
 # importing this module (and the wider package) does not fail on installations that only use
@@ -102,7 +102,7 @@ def mujoco_reload(model_path: Optional[str] = None, model_string: Optional[str] 
 
     try:
         reload_service = rospy.ServiceProxy(service_name, Reload)
-        result = reload_service(model=model, admin_hash=mujoco_core.get_admin_hash())
+        result = reload_service(model=model)
         return result.success, result.status_message
 
     except rospy.ServiceException as e:
@@ -214,8 +214,7 @@ def mujoco_set_body_state(body_name: str, reference_frame: str = "world",
     try:
         set_body_state = rospy.ServiceProxy(service_name, SetBodyState)
         result = set_body_state(state=body_state, set_pose=set_pose, set_twist=set_twist,
-                                set_mass=False, reset_qpos=reset_qpos,
-                                admin_hash=mujoco_core.get_admin_hash())
+                                set_mass=False, reset_qpos=reset_qpos)
         # Tolerate the simulation clock being rewound by a reset: under use_sim_time, resetting the
         # simulator rewinds /clock, so a rospy.sleep that straddles the reset raises
         # ROSTimeMovedBackwardsException. set_body_state is commonly called during episode reset
@@ -270,13 +269,9 @@ def spawn_robot_in_mujoco(pkg_name: str, model_urdf_file: str, model_urdf_folder
                           args_xacro: Optional[List[str]] = None,
                           pub_freq: Optional[float] = None,
                           rob_st_term: bool = False,
-                          gazebo_name: str = "robot", gz_ref_frame: str = "world",
-                          pos_x: float = 0.0, pos_y: float = 0.0, pos_z: float = 0.0,
-                          ori_w: float = 1.0, ori_x: float = 0.0, ori_y: float = 0.0, ori_z: float = 0.0,
                           controllers_file: Optional[str] = None,
                           controllers_list: Optional[List[str]] = None,
                           ros_port: Optional[str] = None,
-                          gazebo_port: Optional[str] = None,
                           controller_package_name: Optional[str] = None,
                           controlled_joints: Optional[List[str]] = None) -> bool:
     """
@@ -295,19 +290,9 @@ def spawn_robot_in_mujoco(pkg_name: str, model_urdf_file: str, model_urdf_folder
         args_xacro (list): Additional arguments to pass to xacro when processing the URDF file. Defaults to None.
         pub_freq (float): The maximum frequency at which the robot_state_publisher should publish. Defaults to None.
         rob_st_term (bool): Whether to launch the robot_state_publisher node in a new terminal. Defaults to False.
-        gazebo_name (str): Accepted for source-compat with ``spawn_robot_in_gazebo``. MuJoCo binds
-            bodies by name in the MJCF, so the spawn-time name has no effect here. Defaults to "robot".
-        gz_ref_frame (str): Accepted for source-compat. The robot reference frame is set in the
-            MJCF, not at spawn time. Defaults to "world".
-        pos_x, pos_y, pos_z (float): Accepted for source-compat. Robot placement lives in the MJCF
-            ``<worldbody>``; the runtime call ignores these for the robot's own pose. Defaults to 0.0.
-        ori_w, ori_x, ori_y, ori_z (float): Accepted for source-compat with the Gazebo quaternion
-            kwargs (``ori_w=1.0`` = identity). MJCF-controlled, ignored at runtime. Defaults to identity.
         controllers_file (str): The name of a YAML file containing controller configurations. Defaults to None.
         controllers_list (list): A list of controller names to spawn. Defaults to None.
         ros_port (str): The ROS_MASTER_URI port (optional). Defaults to None.
-        gazebo_port (str): Accepted for source-compat with ``spawn_robot_in_gazebo``. MuJoCo does not
-            use ``GAZEBO_MASTER_URI``, so this is ignored. Defaults to None.
         controller_package_name (str): The name of the package containing the controllers. Defaults to None.
         controlled_joints (list): If given, only the ``<transmission>`` elements for these joints are
             kept in the loaded ``robot_description``; transmissions for any other joints are stripped.
@@ -318,11 +303,6 @@ def spawn_robot_in_mujoco(pkg_name: str, model_urdf_file: str, model_urdf_folder
     Returns:
         bool: True if all operations were successful, False otherwise.
     """
-    # Source-compat kwargs (placement, gazebo_*) are accepted so a Robot-env subclass can
-    # forward the same kwarg block to either backend. They are intentionally unused below.
-    del gazebo_name, gz_ref_frame
-    del pos_x, pos_y, pos_z, ori_w, ori_x, ori_y, ori_z
-    del gazebo_port
     if controllers_list is None:
         controllers_list = []
 
