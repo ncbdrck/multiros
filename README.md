@@ -7,7 +7,15 @@
 
 MultiROS is an open-source Robot Operating System ([ROS](http://wiki.ros.org/))-based simulation environment designed for concurrent deep reinforcement learning. It provides a flexible and scalable framework for training and evaluating reinforcement learning agents for complex robotic tasks.
 
-This package is part of the [UniROS Framework](https://github.com/ncbdrck/UniROS), which supports training robots in both simulation and the real world. The simulation environment is currently based on [Gazebo](https://gazebosim.org/), providing a realistic simulation platform for testing and developing reinforcement learning algorithms. 
+This package is part of the [UniROS Framework](https://github.com/ncbdrck/UniROS), which supports training robots in both simulation and the real world. The simulation environment is currently based on [Gazebo](https://gazebosim.org/), providing a realistic simulation platform for testing and developing reinforcement learning algorithms.
+
+> ⚠️ **Experimental MuJoCo backend on this branch.** This branch adds an
+> opt-in MuJoCo backend (via [`mujoco_ros_pkgs`](https://github.com/ubi-agni/mujoco_ros_pkgs))
+> alongside Gazebo. The MuJoCo path is **not yet in a stable release**;
+> APIs, kwargs, and defaults are still moving. Gazebo remains the
+> default and stays untouched. See the
+> [UniROS MuJoCo backend guide](https://uniros.readthedocs.io/en/latest/guides/mujoco_backend.html)
+> for install steps and the bootstrap installer's `-m` flag.
 
 For more information, please refer to the main [UniROS repository](https://github.com/ncbdrck/UniROS), which integrates MultiROS and [RealROS](https://github.com/ncbdrck/realros).
 

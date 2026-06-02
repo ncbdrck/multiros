@@ -213,8 +213,11 @@ class MujocoBaseEnv(gym.Env):
                 mujoco_core.pause_mujoco(server_name=self.server_name)
             else:
                 # Real-time loop: physics is never paused; apply the action and let the trailing
-                # sleep pace the step while the background timer refreshes obs/reward. This is the
-                # loop intended for sim->real transfer because it matches the real-env timing.
+                # sleep pace the step. The Task env (subclass) is expected to start its own
+                # ``rospy.Timer`` at ``environment_loop_rate`` to refresh obs/reward/done from the
+                # latest sensor values — this matches the real-env timing and is what enables
+                # sim->real transfer. Like the Gazebo backend, MuJoCo does not enforce
+                # ``environment_loop_rate <= control_loop_freq``; the env author owns that.
                 self._set_action(action)
                 if self.action_cycle_time > 0.0:
                     _safe_ros_sleep(self.action_cycle_time)

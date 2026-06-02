@@ -47,6 +47,30 @@ DEFAULT_SERVER_NAME = "mujoco_server"
 # Cache of step action clients keyed by server name (one ROS master per process).
 _step_clients: dict = {}
 
+# Admin-hash for the mujoco_ros eval-mode guard. Every mutating service
+# (set_pause, reset, set_body_state, reload, shutdown) carries an
+# ``admin_hash`` field; the server only enforces it when launched with
+# ``eval_mode:=true`` (default: false). Training runs leave it empty.
+# A caller that uses eval_mode should call ``set_admin_hash(...)`` once
+# at startup before the first pause/reset/step.
+_admin_hash: str = ""
+
+
+def set_admin_hash(value: Optional[str]) -> None:
+    """Set the module-wide admin_hash used on every mutating MuJoCo service call.
+
+    Pass the same hash the server was launched with under
+    ``eval_mode:=true``. Pass ``""`` (or ``None``) to clear (the
+    default — appropriate for ``eval_mode:=false`` training).
+    """
+    global _admin_hash
+    _admin_hash = value or ""
+
+
+def get_admin_hash() -> str:
+    """Return the current admin_hash (empty string by default)."""
+    return _admin_hash
+
 
 def _require_mujoco_msgs() -> None:
     """Raise a clear error if the mujoco_ros_pkgs Python interfaces are unavailable."""
@@ -194,9 +218,10 @@ def launch_mujoco(launch_roscore: bool = True,
 
     if launch_roscore:
         if port is not None:
-            ros_port, _ = ros_common.launch_roscore(port=int(port))
+            ros_port, _ = ros_common.launch_roscore(
+                port=int(port), allocate_gazebo_port=False)
         else:
-            ros_port, _ = ros_common.launch_roscore()
+            ros_port, _ = ros_common.launch_roscore(allocate_gazebo_port=False)
 
     # Snapshot existing server PIDs so we can identify the ones THIS launch creates
     # (and only kill those on Ctrl+C).
@@ -399,7 +424,7 @@ def pause_mujoco(max_tries: int = 5, server_name: str = DEFAULT_SERVER_NAME,
     for i in range(max_tries):
         try:
             set_pause = rospy.ServiceProxy(service_name, SetPause)
-            response = set_pause(paused=True)
+            response = set_pause(paused=True, admin_hash=_admin_hash)
             if response.success:
                 rospy.logdebug("Pause successful!")
                 return True
@@ -447,7 +472,7 @@ def unpause_mujoco(max_tries: int = 5, server_name: str = DEFAULT_SERVER_NAME,
     for i in range(max_tries):
         try:
             set_pause = rospy.ServiceProxy(service_name, SetPause)
-            response = set_pause(paused=False)
+            response = set_pause(paused=False, admin_hash=_admin_hash)
             if response.success:
                 rospy.logdebug("Unpause successful!")
                 return True

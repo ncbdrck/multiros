@@ -409,7 +409,11 @@ def _remove_from_port_log(ros_port: str) -> None:
         rospy.logwarn(f"Could not edit port log {_PORT_LOG_PATH}: {e}")
 
 
-def launch_roscore(port: Optional[int] = None, set_new_master_vars: bool = True) -> Tuple[str, str]:
+def launch_roscore(
+    port: Optional[int] = None,
+    set_new_master_vars: bool = True,
+    allocate_gazebo_port: bool = True,
+) -> Tuple[str, Optional[str]]:
     """
     Launch a roscore on a free port and (optionally) point this process's
     ``ROS_MASTER_URI`` / ``GAZEBO_MASTER_URI`` at it.
@@ -427,26 +431,34 @@ def launch_roscore(port: Optional[int] = None, set_new_master_vars: bool = True)
         set_new_master_vars (bool): change the current
             ``ROS_MASTER_URI`` and ``GAZEBO_MASTER_URI`` environment
             variables to the selected ones.
+        allocate_gazebo_port (bool): If False, do not reserve a
+            ``GAZEBO_MASTER_URI`` port and do not export the var. Set
+            this to False from MuJoCo callers — MuJoCo never reads
+            ``GAZEBO_MASTER_URI``, so the second port reservation is
+            wasted and lengthens the launch path.
 
     Returns:
-        Tuple[str, str]: ``(ros_port, gazebo_port)`` as strings.
+        Tuple[str, Optional[str]]: ``(ros_port, gazebo_port)`` as strings.
+        ``gazebo_port`` is ``None`` when ``allocate_gazebo_port=False``.
     """
 
     # Try the caller's requested port first if specified and free.
-    if port is not None and _port_is_free(port) and _port_is_free(port + 1):
+    if port is not None and _port_is_free(port) and (
+        not allocate_gazebo_port or _port_is_free(port + 1)
+    ):
         ros_port = str(port)
-        gazebo_port = str(port + 1)
+        gazebo_port = str(port + 1) if allocate_gazebo_port else None
     else:
         if port is not None:
             rospy.logwarn(
                 f"Requested port {port} (or {port + 1}) is unavailable; "
                 f"falling back to a kernel-allocated free port."
             )
-        # Allocate two free ports from the kernel. We don't require
+        # Allocate free ports from the kernel. We don't require
         # them to be consecutive — the original "ros_port + 1 for
         # gazebo" convention was just a convenience.
         ros_port = str(_reserve_free_port())
-        gazebo_port = str(_reserve_free_port())
+        gazebo_port = str(_reserve_free_port()) if allocate_gazebo_port else None
 
     # Diagnostic log only; not load-bearing.
     _append_port_log(ros_port)
@@ -482,7 +494,7 @@ def launch_roscore(port: Optional[int] = None, set_new_master_vars: bool = True)
         except Exception:
             pass
         ros_port = str(_reserve_free_port())
-        gazebo_port = str(_reserve_free_port())
+        gazebo_port = str(_reserve_free_port()) if allocate_gazebo_port else None
     else:
         raise RuntimeError(
             f"Could not launch a verifiable roscore after {_MAX_TRIES} "
