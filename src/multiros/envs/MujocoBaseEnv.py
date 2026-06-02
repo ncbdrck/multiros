@@ -219,9 +219,13 @@ class MujocoBaseEnv(gym.Env):
                 if self.action_cycle_time > 0.0:
                     _safe_ros_sleep(self.action_cycle_time)
 
-        # Deterministic step (fast) mode: the sim must be paused; advance it explicitly for
-        # num_mujoco_steps ticks. No wall-clock sleep -- runs as fast as the CPU allows.
+        # Deterministic step (fast) mode: the sim must be paused before stepping is honoured
+        # (``mujoco_step`` is a no-op when the server is running free), so pause first, advance
+        # explicitly for num_mujoco_steps ticks, and leave the sim paused for the obs read.
+        # With the default ``unpause_pause_physics=False`` the previous step left the sim
+        # unpaused, which silently dropped the step request.
         elif self.sim_step_mode == 2:
+            mujoco_core.pause_mujoco(server_name=self.server_name)
             self._set_action(action)
             mujoco_core.mujoco_step(steps=self.num_mujoco_steps, server_name=self.server_name)
 
