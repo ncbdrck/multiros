@@ -504,6 +504,80 @@ def launch_roscore(port: Optional[int] = None, set_new_master_vars: bool = True)
     return ros_port, gazebo_port
 
 
+def launch_roscore_mujoco(port: Optional[int] = None,
+                          set_new_master_var: bool = True) -> str:
+    """
+    Launch a roscore on a free port and (optionally) point this process's
+    ``ROS_MASTER_URI`` at it. Sibling of :func:`launch_roscore` for the
+    MuJoCo backend — MuJoCo does not use ``GAZEBO_MASTER_URI``, so this
+    function only reserves the ROS port and does not export a Gazebo
+    master variable.
+
+    Args:
+        port (int): A specific desired port for ``ROS_MASTER_URI``. If
+            unavailable on this host, falls back to a kernel-allocated
+            free port and logs a warning.
+        set_new_master_var (bool): change the current ``ROS_MASTER_URI``
+            environment variable to the selected one.
+
+    Returns:
+        str: ``ros_port`` as a string.
+    """
+
+    # Try the caller's requested port first if specified and free.
+    if port is not None and _port_is_free(port):
+        ros_port = str(port)
+    else:
+        if port is not None:
+            rospy.logwarn(
+                f"Requested port {port} is unavailable; "
+                f"falling back to a kernel-allocated free port."
+            )
+        ros_port = str(_reserve_free_port())
+
+    # Diagnostic log only; not load-bearing.
+    _append_port_log(ros_port)
+
+    # Same verify+retry as launch_roscore — see that function for the
+    # rationale behind the xterm wrapper and the verification loop.
+    _MAX_TRIES = 3
+    _WAIT_AFTER_LAUNCH = 5.0
+    _VERIFY_TIMEOUT = 10.0
+    roscore_proc = None
+    for _attempt in range(_MAX_TRIES):
+        term_cmd = "xterm -e ' " + "roscore -p " + ros_port + "'"
+        roscore_proc = subprocess.Popen(term_cmd, shell=True)
+        time.sleep(_WAIT_AFTER_LAUNCH)
+        if _master_is_reachable(int(ros_port), timeout=_VERIFY_TIMEOUT):
+            rospy.loginfo("Roscore launched! with port: " + ros_port)
+            break
+        rospy.logwarn(
+            f"Roscore on port {ros_port} did not come up after "
+            f"{_WAIT_AFTER_LAUNCH:.0f}s (attempt {_attempt + 1}/{_MAX_TRIES}); "
+            "picking a fresh port and retrying."
+        )
+        try:
+            roscore_proc.terminate()
+        except Exception:
+            pass
+        ros_port = str(_reserve_free_port())
+    else:
+        raise RuntimeError(
+            f"Could not launch a verifiable roscore after {_MAX_TRIES} "
+            "attempts. Check ~/.ros/log/ and that xterm + roscore work "
+            "in this terminal (DISPLAY set, no stale rosmaster on the "
+            "selected port)."
+        )
+
+    register_managed_process(roscore_proc, roscore_port=ros_port, kind="roscore")
+
+    # change the current ROS_MASTER to the selected one (no Gazebo var).
+    if set_new_master_var:
+        change_ros_master(ros_port)
+
+    return ros_port
+
+
 """
     02. change_ros_gazebo_master: Change the current ROS and Gazebo Master Environment Variables
 """

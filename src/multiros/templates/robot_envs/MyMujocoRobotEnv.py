@@ -126,13 +126,6 @@ class MyMujocoRobotEnv(MujocoBaseEnv.MujocoBaseEnv):
         reset_controllers = False
 
         """
-        Accepted for interface compatibility with the Gazebo backend. The MuJoCo server provides a
-        single reset that restores the model's default configuration and the configured initial
-        joint states.
-        """
-        reset_mode = "world"
-
-        """
         You can adjust the simulation step mode with two options:
 
             1. Unpause, set the action and pause the simulation.
@@ -173,7 +166,7 @@ class MyMujocoRobotEnv(MujocoBaseEnv.MujocoBaseEnv):
             urdf_folder=urdf_folder, urdf_xacro_args=urdf_xacro_args, namespace=namespace,
             robot_state_publisher_max_freq=robot_state_publisher_max_freq, new_robot_state_term=new_robot_state_term,
             controllers_file=controllers_file, controllers_list=controllers_list,
-            reset_controllers=reset_controllers, reset_mode=reset_mode, sim_step_mode=sim_step_mode,
+            reset_controllers=reset_controllers, sim_step_mode=sim_step_mode,
             num_mujoco_steps=num_mujoco_steps, mujoco_max_update_rate=mujoco_max_update_rate,
             mujoco_timestep=mujoco_timestep, kill_rosmaster=kill_rosmaster, kill_mujoco=kill_mujoco,
             clean_logs=clean_logs, ros_port=ros_port, mujoco_pid=mujoco_pid, server_name=server_name, seed=seed,

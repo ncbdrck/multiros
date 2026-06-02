@@ -21,7 +21,7 @@ Functions provided:
 
 import rospy
 from typing import List, Optional
-from multiros.utils import ros_common
+from multiros.utils import mujoco_core, ros_common
 
 # These interfaces are only required for the MuJoCo backend. Import them lazily so that
 # importing this module (and the wider package) does not fail on installations that only use
@@ -108,7 +108,7 @@ def set_mujoco_max_update_rate(real_time_factor: float, server_name: str = DEFAU
 
     try:
         set_rt_factor = rospy.ServiceProxy(service_name, SetFloat)
-        response = set_rt_factor(value=real_time_factor)
+        response = set_rt_factor(value=real_time_factor, admin_hash=mujoco_core.get_admin_hash())
         return bool(response.success)
 
     except rospy.ServiceException as e:
@@ -218,7 +218,7 @@ def set_mujoco_gravity(gravity: List[float], server_name: str = DEFAULT_SERVER_N
 
     try:
         set_gravity = rospy.ServiceProxy(service_name, SetGravity)
-        response = set_gravity(gravity=gravity)
+        response = set_gravity(gravity=gravity, admin_hash=mujoco_core.get_admin_hash())
         return bool(response.success)
 
     except rospy.ServiceException as e:

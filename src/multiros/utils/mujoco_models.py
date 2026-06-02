@@ -37,7 +37,7 @@ from typing import Dict, List, Optional, Sequence, Tuple
 
 from std_msgs.msg import Header
 from geometry_msgs.msg import Pose, PoseStamped, Twist, TwistStamped, Point, Quaternion, Vector3
-from multiros.utils import ros_common, ros_controllers
+from multiros.utils import mujoco_core, ros_common, ros_controllers
 
 # These interfaces are only required for the MuJoCo backend. Import them lazily so that
 # importing this module (and the wider package) does not fail on installations that only use
@@ -102,7 +102,7 @@ def mujoco_reload(model_path: Optional[str] = None, model_string: Optional[str] 
 
     try:
         reload_service = rospy.ServiceProxy(service_name, Reload)
-        result = reload_service(model=model)
+        result = reload_service(model=model, admin_hash=mujoco_core.get_admin_hash())
         return result.success, result.status_message
 
     except rospy.ServiceException as e:
@@ -214,7 +214,8 @@ def mujoco_set_body_state(body_name: str, reference_frame: str = "world",
     try:
         set_body_state = rospy.ServiceProxy(service_name, SetBodyState)
         result = set_body_state(state=body_state, set_pose=set_pose, set_twist=set_twist,
-                                set_mass=False, reset_qpos=reset_qpos)
+                                set_mass=False, reset_qpos=reset_qpos,
+                                admin_hash=mujoco_core.get_admin_hash())
         # Tolerate the simulation clock being rewound by a reset: under use_sim_time, resetting the
         # simulator rewinds /clock, so a rospy.sleep that straddles the reset raises
         # ROSTimeMovedBackwardsException. set_body_state is commonly called during episode reset

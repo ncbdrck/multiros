@@ -44,8 +44,36 @@ except ImportError:
 # advertised under this node's private namespace.
 DEFAULT_SERVER_NAME = "mujoco_server"
 
-# Cache of step action clients keyed by server name (one ROS master per process).
+# Cache of step action clients keyed by (server_name, ros_port). The action client
+# is bound to whichever ROS master was active when SimpleActionClient() was constructed;
+# change_ros_master only flips an env var afterwards. Keying by server_name alone meant
+# a single process running two MuJoCo instances on different ROS masters would reuse the
+# first instance's client for both, talking to the wrong server.
 _step_clients: dict = {}
+
+# Module-level admin_hash for the mujoco_ros eval-mode guard. Every mutating
+# service (SetPause, SetBodyState, Reload, SetFloat, SetGravity) has an
+# ``admin_hash`` field that the server only enforces when launched with
+# ``eval_mode:=true`` (default false). Training runs leave it empty (""),
+# which matches the default eval_mode=false. A caller using eval_mode should
+# call ``set_admin_hash(...)`` once at startup before the first pause/reset/step.
+_admin_hash: str = ""
+
+
+def set_admin_hash(value: Optional[str]) -> None:
+    """Set the module-wide admin_hash used on every mutating MuJoCo service call.
+
+    Pass the same hash the server was launched with under
+    ``eval_mode:=true``. Pass ``""`` (or ``None``) to clear (the default —
+    appropriate for ``eval_mode:=false`` training).
+    """
+    global _admin_hash
+    _admin_hash = value or ""
+
+
+def get_admin_hash() -> str:
+    """Return the current admin_hash (empty string by default)."""
+    return _admin_hash
 
 
 def _require_mujoco_msgs() -> None:
@@ -193,10 +221,12 @@ def launch_mujoco(launch_roscore: bool = True,
     ros_port = None
 
     if launch_roscore:
+        # Use the MuJoCo-specific roscore launcher so we don't reserve and
+        # export a GAZEBO_MASTER_URI port we'll never use.
         if port is not None:
-            ros_port, _ = ros_common.launch_roscore(port=int(port))
+            ros_port = ros_common.launch_roscore_mujoco(port=int(port))
         else:
-            ros_port, _ = ros_common.launch_roscore()
+            ros_port = ros_common.launch_roscore_mujoco()
 
     # Snapshot existing server PIDs so we can identify the ones THIS launch creates
     # (and only kill those on Ctrl+C).
@@ -315,17 +345,17 @@ def close_mujoco(process: subprocess.Popen, ros_port: Optional[str] = None,
 """
 
 
-def reset_mujoco(reset_type: str = "simulation", max_tries: int = 5,
-                 server_name: str = DEFAULT_SERVER_NAME, ros_port: Optional[str] = None) -> bool:
+def reset_mujoco(max_tries: int = 5, server_name: str = DEFAULT_SERVER_NAME,
+                 ros_port: Optional[str] = None) -> bool:
     """
     Function to reset the MuJoCo simulation.
 
-    The MuJoCo server provides a single reset that restores the model's default configuration
-    and re-applies the configured initial joint states. The "reset_type" argument is accepted
-    for interface compatibility with the Gazebo backend; both values map to the same reset.
+    The MuJoCo server provides a single ``~reset`` (``std_srvs/Empty``) that calls
+    ``mj_resetData`` and re-applies the configured initial joint states. Unlike Gazebo,
+    MuJoCo has no world-vs-simulation reset distinction (no separate time vs data rewind),
+    so there is no ``reset_type`` argument.
 
     Args:
-        reset_type (str): Accepted for interface compatibility ("simulation" or "world").
         max_tries (int): The maximum number of tries to reset the simulation (optional).
         server_name (str): Graph name of the server node (optional).
         ros_port (str): The ROS_MASTER_URI port (optional).
@@ -399,7 +429,7 @@ def pause_mujoco(max_tries: int = 5, server_name: str = DEFAULT_SERVER_NAME,
     for i in range(max_tries):
         try:
             set_pause = rospy.ServiceProxy(service_name, SetPause)
-            response = set_pause(paused=True)
+            response = set_pause(paused=True, admin_hash=_admin_hash)
             if response.success:
                 rospy.logdebug("Pause successful!")
                 return True
@@ -447,7 +477,7 @@ def unpause_mujoco(max_tries: int = 5, server_name: str = DEFAULT_SERVER_NAME,
     for i in range(max_tries):
         try:
             set_pause = rospy.ServiceProxy(service_name, SetPause)
-            response = set_pause(paused=False)
+            response = set_pause(paused=False, admin_hash=_admin_hash)
             if response.success:
                 rospy.logdebug("Unpause successful!")
                 return True
@@ -490,14 +520,18 @@ def mujoco_step(steps: int, server_name: str = DEFAULT_SERVER_NAME,
     if ros_port is not None:
         ros_common.change_ros_master(ros_port=ros_port)
 
+    # Key by (server_name, ros_port) so two instances on different ROS masters
+    # don't reuse each other's action client (which is bound to whichever master
+    # was active at construction).
+    cache_key = (server_name, ros_port)
     try:
-        client = _step_clients.get(server_name)
+        client = _step_clients.get(cache_key)
         if client is None:
             client = actionlib.SimpleActionClient(f"/{server_name}/step", StepAction)
             if not client.wait_for_server(rospy.Duration(timeout)):
                 rospy.logerr(f"Timeout ({timeout}s) waiting for the MuJoCo step action server.")
                 return False
-            _step_clients[server_name] = client
+            _step_clients[cache_key] = client
 
         client.send_goal(StepGoal(num_steps=steps))
         client.wait_for_result(rospy.Duration(timeout))

@@ -34,7 +34,7 @@ class MujocoGoalEnv(gymnasium_robotics.GoalEnv):
                  urdf_folder: str = "/urdf", urdf_xacro_args: List[str] = None, namespace: str = "/",
                  robot_state_publisher_max_freq: float = None, new_robot_state_term: bool = False,
                  controllers_file: str = None, controllers_list: List[str] = None,
-                 reset_controllers: bool = False, reset_mode: str = "world", sim_step_mode: int = 1,
+                 reset_controllers: bool = False, sim_step_mode: int = 1,
                  num_mujoco_steps: int = 1, mujoco_max_update_rate: float = None, mujoco_timestep: float = None,
                  kill_rosmaster: bool = True, kill_mujoco: bool = True, clean_logs: bool = False,
                  ros_port: str = None, mujoco_pid=None, server_name: str = "mujoco_server", seed: int = None,
@@ -56,7 +56,6 @@ class MujocoGoalEnv(gymnasium_robotics.GoalEnv):
             controllers_file (str): The file containing the controller configurations.
             controllers_list (List[str]): The list of ROS controllers to use.
             reset_controllers (bool): Whether to reset the controllers on reset.
-            reset_mode (str): Accepted for interface compatibility with the Gazebo backend.
             sim_step_mode (int): The mode to use when stepping the simulation (1 or 2). Mode 2 advances the
                 simulation with the step action and requires the simulation to be paused.
             num_mujoco_steps (int): The number of simulation steps to take per step call in mode 2.
@@ -130,7 +129,6 @@ class MujocoGoalEnv(gymnasium_robotics.GoalEnv):
         self.reset_controllers = reset_controllers
         self.controllers_list = controllers_list
         self.controlled_joints = controlled_joints
-        self.reset_mode = reset_mode
         self.sim_step_mode = sim_step_mode
         self.num_mujoco_steps = num_mujoco_steps
         self.kill_rosmaster = kill_rosmaster
@@ -492,7 +490,7 @@ class MujocoGoalEnv(gymnasium_robotics.GoalEnv):
         # Pause the simulation and reset it
         if self.unpause_pause_physics:
             mujoco_core.pause_mujoco(server_name=self.server_name)
-        mujoco_core.reset_mujoco(reset_type=self.reset_mode, server_name=self.server_name)
+        mujoco_core.reset_mujoco(server_name=self.server_name)
 
         # Reset the controllers
         if self.reset_controllers:
