@@ -151,9 +151,13 @@ Please note that the instructions assume you are using Ubuntu 20.04 and ROS Noet
 To get started with MultiROS, follow these steps:
 
 1. Clone UniROS (provides the shared `uniros` runtime) and MultiROS into
-   the same catkin workspace:
+   the same catkin workspace. **Skip this step if you've already
+   followed the recursive UniROS install** — UniROS already vendors
+   MultiROS as a submodule under `UniROS/multiros/`, and cloning a
+   second standalone copy alongside it creates a duplicate catkin
+   package that the workspace build will reject:
     ```shell
-    cd ~/catkin_ws/src
+    cd ~/uniros_ws/src
     git clone -b gymnasium https://github.com/ncbdrck/UniROS.git
     git clone -b gymnasium https://github.com/ncbdrck/multiros.git
     ```
